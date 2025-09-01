@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { UserRole } from '../../types/user-roles';
+import { UserRole } from '@/types/user-roles';
 
 interface RoleOption {
   role: UserRole;
