@@ -114,7 +114,7 @@ export default function EmployeeLogin() {
               Don't have an employee account?
             </p>
             <Link
-              href="/employee/(auth)/signup"
+              href="/employee/signup"
               className="inline-block bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors duration-200"
             >
               Register as Employee

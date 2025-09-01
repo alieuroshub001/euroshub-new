@@ -5,7 +5,7 @@ import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
-export default function ClientLoginPage() {
+export default function ClientLogin() {
   const router = useRouter();
   const [formData, setFormData] = useState({
     email: '',
@@ -114,7 +114,7 @@ export default function ClientLoginPage() {
               Don't have a client account?
             </p>
             <Link
-              href="/client/(auth)/signup"
+              href="/client/signup"
               className="inline-block bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors duration-200"
             >
               Register as Client

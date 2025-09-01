@@ -1,11 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import VerifyOtp from '../global/VerifyOtp';
 
-export default function ClientSignupPage() {
-  const router = useRouter();
+export default function ClientSignup() {
   const [step, setStep] = useState<'form' | 'otp'>('form');
   const [formData, setFormData] = useState({
     firstName: '',
@@ -15,10 +14,8 @@ export default function ClientSignupPage() {
     password: '',
     confirmPassword: '',
   });
-  const [otp, setOtp] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
@@ -70,150 +67,12 @@ export default function ClientSignupPage() {
     }
   };
 
-  const handleOtpSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError('');
-
-    try {
-      const response = await fetch('/api/auth/verify-otp', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: formData.email,
-          otp: otp,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        setSuccess(true);
-      } else {
-        setError(data.message);
-      }
-    } catch (error) {
-      setError('An unexpected error occurred');
-      console.error('OTP verification error:', error);
-    } finally {
-      setIsLoading(false);
-    }
+  const handleBackToForm = () => {
+    setStep('form');
   };
-
-  const resendOtp = async () => {
-    setIsLoading(true);
-    setError('');
-
-    try {
-      const response = await fetch('/api/auth/resend-otp', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: formData.email,
-        }),
-      });
-
-      const data = await response.json();
-      if (!data.success) {
-        setError(data.message);
-      }
-    } catch (error) {
-      setError('Failed to resend OTP');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  if (success) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-indigo-100">
-        <div className="max-w-md w-full mx-auto">
-          <div className="bg-white rounded-xl shadow-lg p-8 text-center">
-            <div className="text-6xl mb-4">✅</div>
-            <h1 className="text-3xl font-bold text-green-600 mb-4">
-              Registration Complete!
-            </h1>
-            <p className="text-gray-600 mb-6">
-              Your client registration has been submitted successfully. You will receive an email notification once an admin or HR manager approves your account.
-            </p>
-            <Link
-              href="/login"
-              className="inline-block bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-6 rounded-lg transition-colors"
-            >
-              Back to Login
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   if (step === 'otp') {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-indigo-100">
-        <div className="max-w-md w-full mx-auto">
-          <div className="bg-white rounded-xl shadow-lg p-8">
-            <div className="text-center mb-8">
-              <div className="text-6xl mb-4">📧</div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                Verify Your Email
-              </h1>
-              <p className="text-gray-600">
-                We've sent a verification code to <strong>{formData.email}</strong>
-              </p>
-            </div>
-
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
-                {error}
-              </div>
-            )}
-
-            <form onSubmit={handleOtpSubmit} className="space-y-6">
-              <div>
-                <label htmlFor="otp" className="block text-sm font-medium text-gray-700 mb-2">
-                  6-Digit Verification Code
-                </label>
-                <input
-                  id="otp"
-                  name="otp"
-                  type="text"
-                  required
-                  maxLength={6}
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors text-center text-2xl font-mono tracking-wider"
-                  placeholder="123456"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={isLoading || otp.length !== 6}
-                className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200"
-              >
-                {isLoading ? 'Verifying...' : 'Verify Email'}
-              </button>
-            </form>
-
-            <div className="mt-6 text-center">
-              <p className="text-gray-600 mb-2">Didn't receive the code?</p>
-              <button
-                onClick={resendOtp}
-                disabled={isLoading}
-                className="text-purple-600 hover:text-purple-700 font-medium underline disabled:text-purple-400"
-              >
-                Resend verification code
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+    return <VerifyOtp email={formData.email} role="client" onBack={handleBackToForm} />;
   }
 
   return (
@@ -352,7 +211,7 @@ export default function ClientSignupPage() {
               Already have a client account?
             </p>
             <Link
-              href="/client/(auth)/login"
+              href="/client/login"
               className="text-purple-600 hover:text-purple-700 font-medium underline"
             >
               Sign in here
