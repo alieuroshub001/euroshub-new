@@ -114,7 +114,7 @@ export default function AdminLogin() {
               Don't have an admin account?
             </p>
             <Link
-              href="/admin/(auth)/signup"
+              href="/admin/signup"
               className="inline-block bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors duration-200"
             >
               Create Admin Account

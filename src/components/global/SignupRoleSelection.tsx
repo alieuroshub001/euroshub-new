@@ -55,11 +55,7 @@ export default function SignupRoleSelection() {
   const handleRoleSelect = (role: UserRole) => {
     setSelectedRole(role);
     // Navigate to role-specific signup page
-    if (role === 'admin') {
-      router.push('/admin/(auth)/signup');
-    } else {
-      router.push(`/${role}/(auth)/signup`);
-    }
+    router.push(`/${role}/signup`);
   };
 
   return (

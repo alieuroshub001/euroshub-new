@@ -58,7 +58,7 @@ export default function AdminSignup() {
       if (data.success) {
         setSuccess(true);
         setTimeout(() => {
-          router.push('/admin/(auth)/login');
+          router.push('/admin/login');
         }, 2000);
       } else {
         setError(data.message);
@@ -231,7 +231,7 @@ export default function AdminSignup() {
               Already have an admin account?
             </p>
             <Link
-              href="/admin/(auth)/login"
+              href="/admin/login"
               className="text-red-600 hover:text-red-700 font-medium underline"
             >
               Sign in here

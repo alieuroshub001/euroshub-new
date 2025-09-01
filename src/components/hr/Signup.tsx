@@ -211,7 +211,7 @@ export default function HRSignup() {
               Already have an HR account?
             </p>
             <Link
-              href="/hr/(auth)/login"
+              href="/hr/login"
               className="text-blue-600 hover:text-blue-700 font-medium underline"
             >
               Sign in here

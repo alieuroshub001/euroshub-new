@@ -114,7 +114,7 @@ export default function HRLogin() {
               Don't have an HR account?
             </p>
             <Link
-              href="/hr/(auth)/signup"
+              href="/hr/signup"
               className="inline-block bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors duration-200"
             >
               Register as HR Manager

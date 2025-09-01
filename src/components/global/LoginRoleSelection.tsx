@@ -50,7 +50,7 @@ export default function LoginRoleSelection() {
   const handleRoleSelect = (role: UserRole) => {
     setSelectedRole(role);
     // Navigate to role-specific login page
-    router.push(`/${role}/(auth)/login`);
+    router.push(`/${role}/login`);
   };
 
   return (
