@@ -47,7 +47,7 @@ export default async function DashboardPage() {
         <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
           <h3 className="font-semibold text-yellow-800">Pending ID Assignment</h3>
           <p className="mt-2 text-sm text-yellow-700">
-            Your account is waiting for admin to assign your {user.role === &apos;client&apos; ? &apos;client&apos; : &apos;employee&apos;} ID. 
+            Your account is waiting for admin to assign your {user.role === 'client' ? 'client' : 'employee'} ID. 
             You&apos;ll receive an email notification once it&apos;s assigned.
           </p>
         </div>

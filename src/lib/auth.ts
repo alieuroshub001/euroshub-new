@@ -186,7 +186,7 @@ export const authOptions = {
       if (user && 'role' in user) {
         const extUser = user as ExtendedUser;
         token.id = extUser.id;
-        token.name = extUser.name;
+        token.name = extUser.name || undefined;
         token.role = extUser.role;
         token.fullname = extUser.fullname;
         token.number = extUser.number;
@@ -210,7 +210,7 @@ export const authOptions = {
       }
       return session;
     },
-    async redirect({ url, baseUrl }) {
+    async redirect({ url, baseUrl }: { url: string; baseUrl: string }) {
       // Allow relative callback URLs
       if (url.startsWith('/')) return `${baseUrl}${url}`;
       // Allow callback URLs on the same origin
