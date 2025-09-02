@@ -14,7 +14,9 @@ import {
   UserGroupIcon,
   BriefcaseIcon,
   ClipboardDocumentListIcon,
-  BuildingOfficeIcon
+  BuildingOfficeIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon
 } from '@heroicons/react/24/outline';
 
 interface NavItem {
@@ -141,9 +143,11 @@ const navigationItems: NavItem[] = [
 interface SidebarProps {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
+  isCollapsed: boolean;
+  setIsCollapsed: (collapsed: boolean) => void;
 }
 
-export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
+export default function Sidebar({ isOpen, setIsOpen, isCollapsed, setIsCollapsed }: SidebarProps) {
   const { data: session } = useSession();
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
@@ -153,7 +157,66 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
   }, []);
 
   if (!mounted || !session?.user) {
-    return null;
+    return (
+      <div
+        className={`bg-white border-r border-gray-200 shadow-lg transition-all duration-300 ease-in-out ${
+          isCollapsed ? 'w-16' : 'w-72'
+        } ${
+          isOpen ? 'fixed inset-y-0 left-0 z-50 translate-x-0' : 'fixed inset-y-0 left-0 z-50 -translate-x-full'
+        } lg:relative lg:translate-x-0 lg:z-auto`}
+      >
+        <div className="flex flex-col h-full min-h-0 animate-pulse">
+          {/* Loading Header */}
+          <div className={`flex items-center border-b border-gray-200 transition-all duration-300 ${
+            isCollapsed ? 'justify-center p-4' : 'justify-between p-6'
+          }`}>
+            {!isCollapsed && (
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 bg-gray-200 rounded-lg"></div>
+                <div className="h-6 w-24 bg-gray-200 rounded"></div>
+              </div>
+            )}
+            <div className="w-9 h-9 bg-gray-200 rounded-lg"></div>
+          </div>
+
+          {/* Loading User Info */}
+          <div className={`border-b border-gray-200 transition-all duration-300 ${
+            isCollapsed ? 'p-3' : 'p-6'
+          }`}>
+            <div className={`flex items-center transition-all duration-300 ${
+              isCollapsed ? 'justify-center' : 'space-x-3'
+            }`}>
+              <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
+              {!isCollapsed && (
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 bg-gray-200 rounded w-24"></div>
+                  <div className="h-3 bg-gray-200 rounded w-16"></div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Loading Navigation */}
+          <nav className={`flex-1 py-6 space-y-1 transition-all duration-300 ${
+            isCollapsed ? 'px-2' : 'px-4'
+          }`}>
+            {[...Array(5)].map((_, i) => (
+              <div
+                key={i}
+                className={`flex items-center rounded-xl transition-all duration-200 ${
+                  isCollapsed ? 'justify-center p-3 w-12 h-12 mx-auto' : 'px-4 py-3'
+                }`}
+              >
+                <div className={`bg-gray-200 rounded ${
+                  isCollapsed ? 'w-6 h-6' : 'w-5 h-5 mr-3'
+                }`}></div>
+                {!isCollapsed && <div className="h-4 bg-gray-200 rounded flex-1"></div>}
+              </div>
+            ))}
+          </nav>
+        </div>
+      </div>
+    );
   }
 
   const userRole = session.user.role;
@@ -180,19 +243,42 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
 
       {/* Sidebar */}
       <div
-        className={`fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${
-          isOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
+        className={`bg-white border-r border-gray-200 shadow-lg transition-all duration-300 ease-in-out ${
+          isCollapsed ? 'w-16' : 'w-72'
+        } ${
+          isOpen ? 'fixed inset-y-0 left-0 z-50 translate-x-0' : 'fixed inset-y-0 left-0 z-50 -translate-x-full'
+        } lg:relative lg:translate-x-0 lg:z-auto`}
       >
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full min-h-0">
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">E</span>
+          <div className={`flex items-center border-b border-gray-200 transition-all duration-300 ${
+            isCollapsed ? 'justify-center p-4' : 'justify-between p-6'
+          }`}>
+            {!isCollapsed && (
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center shadow-lg">
+                  <span className="text-white font-bold text-sm">E</span>
+                </div>
+                <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  Euroshub
+                </h1>
               </div>
-              <h1 className="text-xl font-bold text-gray-900">Euroshub</h1>
-            </div>
+            )}
+            
+            {/* Collapse/Expand Button - Desktop only */}
+            <button
+              onClick={() => setIsCollapsed(!isCollapsed)}
+              className="hidden lg:flex p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+              title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            >
+              {isCollapsed ? (
+                <ChevronRightIcon className="w-5 h-5" />
+              ) : (
+                <ChevronLeftIcon className="w-5 h-5" />
+              )}
+            </button>
+            
+            {/* Close Button - Mobile only */}
             <button
               onClick={() => setIsOpen(false)}
               className="lg:hidden p-1 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100"
@@ -202,31 +288,39 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
           </div>
 
           {/* User Info */}
-          <div className="p-6 border-b border-gray-200">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+          <div className={`border-b border-gray-200 transition-all duration-300 ${
+            isCollapsed ? 'p-3' : 'p-6'
+          }`}>
+            <div className={`flex items-center transition-all duration-300 ${
+              isCollapsed ? 'justify-center' : 'space-x-3'
+            }`}>
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center ring-2 ring-blue-200 shadow-sm">
                 <span className="text-blue-600 font-semibold text-sm">
                   {session.user.fullname?.charAt(0).toUpperCase()}
                 </span>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">
-                  {session.user.fullname}
-                </p>
-                <p className="text-xs text-gray-500 truncate">
-                  {session.user.role.charAt(0).toUpperCase() + session.user.role.slice(1)}
-                </p>
-                {(session.user.employeeId || session.user.clientId) && (
-                  <p className="text-xs text-blue-600 truncate">
-                    ID: {session.user.employeeId || session.user.clientId}
+              {!isCollapsed && (
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900 truncate">
+                    {session.user.fullname}
                   </p>
-                )}
-              </div>
+                  <p className="text-xs text-gray-500 truncate">
+                    {session.user.role.charAt(0).toUpperCase() + session.user.role.slice(1)}
+                  </p>
+                  {(session.user.employeeId || session.user.clientId) && (
+                    <p className="text-xs text-blue-600 truncate">
+                      ID: {session.user.employeeId || session.user.clientId}
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+          <nav className={`flex-1 py-6 space-y-1 transition-all duration-300 min-h-0 ${
+            isCollapsed ? 'px-2 overflow-hidden' : 'px-4 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent'
+          }`}>
             {filteredNavigation.map((item) => {
               const Icon = item.icon;
               const isActive = isActivePath(item.href);
@@ -235,11 +329,14 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
+                  className={`group flex items-center text-sm font-medium rounded-xl transition-all duration-200 relative ${
+                    isCollapsed ? 'justify-center p-3 w-12 h-12 mx-auto flex-shrink-0' : 'px-4 py-3'
+                  } ${
                     isActive
-                      ? 'bg-blue-50 text-blue-700 border-r-4 border-blue-700'
-                      : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                      ? 'bg-gradient-to-r from-blue-50 to-purple-50 text-blue-700 shadow-sm'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   }`}
+                  title={isCollapsed ? item.name : undefined}
                   onClick={() => {
                     // Close mobile sidebar when navigation item is clicked
                     if (window.innerWidth < 1024) {
@@ -248,22 +345,36 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                   }}
                 >
                   <Icon
-                    className={`w-5 h-5 mr-3 ${
-                      isActive ? 'text-blue-700' : 'text-gray-400'
+                    className={`transition-all duration-200 ${
+                      isCollapsed ? 'w-6 h-6' : 'w-5 h-5 mr-3'
+                    } ${
+                      isActive ? 'text-blue-700' : 'text-gray-400 group-hover:text-gray-600'
                     }`}
                   />
-                  {item.name}
+                  {!isCollapsed && (
+                    <span className="truncate">{item.name}</span>
+                  )}
+                  
+                  {/* Tooltip for collapsed state */}
+                  {isCollapsed && (
+                    <div className="absolute left-full ml-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 shadow-lg">
+                      {item.name}
+                      <div className="absolute top-1/2 left-0 transform -translate-y-1/2 -translate-x-1 border-4 border-transparent border-r-gray-900"></div>
+                    </div>
+                  )}
                 </Link>
               );
             })}
           </nav>
 
           {/* Footer */}
-          <div className="p-4 border-t border-gray-200">
-            <div className="text-xs text-gray-500 text-center">
-              © 2024 Euroshub CRM
+          {!isCollapsed && (
+            <div className="p-4 border-t border-gray-200">
+              <div className="text-xs text-gray-500 text-center">
+                © 2025 Euroshub CRM
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </>

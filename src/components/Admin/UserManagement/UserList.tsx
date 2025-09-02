@@ -1,12 +1,14 @@
 "use client"
 import { IUser, IUserManagementFilters } from '@/types';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import UserCard from './UserCard';
 import UserFilters from './UserFilters';
+import { ArrowPathIcon } from '@heroicons/react/24/outline';
 
 export default function UserList() {
   const [users, setUsers] = useState<IUser[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [filters, setFilters] = useState<IUserManagementFilters>({});
   const [pagination, setPagination] = useState({
@@ -22,9 +24,14 @@ export default function UserList() {
     declined: 0,
     blocked: 0
   });
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  const fetchUsers = useCallback(async (page = 1) => {
-    setLoading(true);
+  const fetchUsers = useCallback(async (page = 1, isRefresh = false) => {
+    if (isRefresh) {
+      setRefreshing(true);
+    } else {
+      setLoading(true);
+    }
     try {
       const params = new URLSearchParams({
         page: page.toString(),
@@ -48,6 +55,7 @@ export default function UserList() {
       console.error('Error fetching users:', error);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   }, [filters]);
 
@@ -71,10 +79,57 @@ export default function UserList() {
     }
   }, []);
 
+  // Auto-refresh functionality
+  const startAutoRefresh = useCallback(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+    
+    intervalRef.current = setInterval(() => {
+      fetchUsers(pagination.current, true);
+      fetchUserCounts();
+    }, 30000); // Refresh every 30 seconds
+  }, [fetchUsers, fetchUserCounts, pagination.current]);
+
+  const stopAutoRefresh = useCallback(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  }, []);
+
+  const handleManualRefresh = async () => {
+    await fetchUsers(pagination.current, true);
+    await fetchUserCounts();
+  };
+
   useEffect(() => {
     fetchUsers();
     fetchUserCounts();
-  }, [fetchUsers, fetchUserCounts]);
+    startAutoRefresh();
+
+    // Cleanup on unmount
+    return () => {
+      stopAutoRefresh();
+    };
+  }, [fetchUsers, fetchUserCounts, startAutoRefresh, stopAutoRefresh]);
+
+  // Handle visibility change to pause/resume auto-refresh
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        stopAutoRefresh();
+      } else {
+        startAutoRefresh();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [startAutoRefresh, stopAutoRefresh]);
 
   const handleStatusUpdate = async (userId: string, status: 'approved' | 'declined' | 'blocked', employeeId?: string, clientId?: string) => {
     setActionLoading(userId);
@@ -109,6 +164,93 @@ export default function UserList() {
     }
   };
 
+  const handleUserUpdate = async (userId: string, updates: Partial<IUser>) => {
+    setActionLoading(userId);
+    try {
+      const response = await fetch('/api/admin/users/update', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId,
+          updates
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        await fetchUsers(pagination.current);
+        await fetchUserCounts();
+        alert('User updated successfully');
+      } else {
+        alert(`Error: ${data.message}`);
+      }
+    } catch (error) {
+      console.error('Error updating user:', error);
+      alert('Failed to update user');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleUserDelete = async (userId: string) => {
+    setActionLoading(userId);
+    try {
+      const response = await fetch('/api/admin/users/delete', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        await fetchUsers(pagination.current);
+        await fetchUserCounts();
+        alert('User deleted successfully');
+      } else {
+        alert(`Error: ${data.message}`);
+      }
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      alert('Failed to delete user');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleUserUnblock = async (userId: string) => {
+    setActionLoading(userId);
+    try {
+      const response = await fetch('/api/admin/users/unblock', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        await fetchUsers(pagination.current);
+        await fetchUserCounts();
+        alert('User unblocked successfully');
+      } else {
+        alert(`Error: ${data.message}`);
+      }
+    } catch (error) {
+      console.error('Error unblocking user:', error);
+      alert('Failed to unblock user');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const handlePageChange = (page: number) => {
     fetchUsers(page);
   };
@@ -123,6 +265,28 @@ export default function UserList() {
 
   return (
     <div>
+      {/* Header with refresh button */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-4">
+          <h2 className="text-lg font-semibold text-gray-900">
+            User Management Dashboard
+          </h2>
+          <div className="flex items-center gap-2 text-sm text-gray-500">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+            Auto-refreshing every 30s
+          </div>
+        </div>
+        
+        <button
+          onClick={handleManualRefresh}
+          disabled={refreshing}
+          className="flex items-center gap-2 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+        >
+          <ArrowPathIcon className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+          {refreshing ? 'Refreshing...' : 'Refresh Now'}
+        </button>
+      </div>
+
       <UserFilters
         filters={filters}
         onFiltersChange={setFilters}
@@ -141,6 +305,9 @@ export default function UserList() {
                 key={user._id || user.id}
                 user={user}
                 onStatusUpdate={handleStatusUpdate}
+                onUserUpdate={handleUserUpdate}
+                onUserDelete={handleUserDelete}
+                onUserUnblock={handleUserUnblock}
                 isLoading={actionLoading === user.id}
               />
             ))}

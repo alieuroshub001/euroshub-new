@@ -3,6 +3,7 @@ import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import LogoutButton from '@/components/auth/LogoutButton';
 import DeleteAccountButton from '@/components/auth/DeleteAccountButton';
+import DashboardLayout from '@/components/layouts/DashboardLayout';
 
 export default async function AdminDashboard() {
   const session = await getServerSession(authOptions);
@@ -20,7 +21,8 @@ export default async function AdminDashboard() {
   const user = session.user;
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <DashboardLayout>
+      <div className="p-6">
       <div className="flex justify-between items-start">
         <div>
           <h1 className="text-2xl font-bold">Admin Dashboard</h1>
@@ -83,6 +85,7 @@ export default async function AdminDashboard() {
           </a>
         </div>
       </div>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }
