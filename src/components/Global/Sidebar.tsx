@@ -46,6 +46,12 @@ const navigationItems: NavItem[] = [
     roles: ['admin']
   },
   {
+    name: 'Project Management',
+    href: '/admin/projects',
+    icon: BriefcaseIcon,
+    roles: ['admin']
+  },
+  {
     name: 'Reports',
     href: '/admin/reports',
     icon: ChartBarIcon,
@@ -59,7 +65,7 @@ const navigationItems: NavItem[] = [
     roles: ['client']
   },
   {
-    name: 'Projects',
+    name: 'Project Management',
     href: '/client/projects',
     icon: BriefcaseIcon,
     roles: ['client']
@@ -102,6 +108,12 @@ const navigationItems: NavItem[] = [
     roles: ['hr']
   },
   {
+    name: 'Project Management',
+    href: '/hr/projects',
+    icon: BriefcaseIcon,
+    roles: ['hr']
+  },
+  {
     name: 'Payroll',
     href: '/hr/payroll',
     icon: ClipboardDocumentListIcon,
@@ -130,6 +142,12 @@ const navigationItems: NavItem[] = [
     name: 'Documents',
     href: '/employee/documents',
     icon: DocumentTextIcon,
+    roles: ['employee']
+  },
+  {
+    name: 'Project Management',
+    href: '/employee/projects',
+    icon: BriefcaseIcon,
     roles: ['employee']
   },
   {
