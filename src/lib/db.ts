@@ -1,29 +1,54 @@
-import mongoose from 'mongoose';
+// lib/db.ts
+import mongoose from "mongoose";
 
-interface ConnectionObject {
-  isConnected?: number;
+const MONGODB_URI = process.env.MONGODB_URI;
+
+if (!MONGODB_URI) {
+  throw new Error("Please define the MONGODB_URI environment variable");
 }
 
-const connection: ConnectionObject = {};
+interface MongooseCache {
+  conn: typeof mongoose | null;
+  promise: Promise<typeof mongoose> | null;
+}
 
-async function dbConnect(): Promise<void> {
-  if (connection.isConnected) {
-    console.log('Already connected to the database');
-    return;
+// Use a type assertion for the global extension
+type MongooseGlobal = typeof globalThis & {
+  mongoose: MongooseCache;
+};
+
+const globalWithMongoose = global as MongooseGlobal;
+
+let cached = globalWithMongoose.mongoose;
+
+if (!cached) {
+  cached = globalWithMongoose.mongoose = { conn: null, promise: null };
+}
+
+async function connectToDatabase() {
+  if (cached.conn) {
+    return cached.conn;
+  }
+
+  if (!cached.promise) {
+    const opts = {
+      bufferCommands: false,
+    };
+    
+    // Since we've already checked MONGODB_URI is defined, we can assert it as string
+    cached.promise = mongoose.connect(MONGODB_URI as string, opts).then((mongoose) => {
+      return mongoose;
+    });
   }
 
   try {
-    const db = await mongoose.connect(process.env.MONGODB_URI || '', {
-      bufferCommands: false,
-    });
-
-    connection.isConnected = db.connections[0].readyState;
-
-    console.log('Database connected successfully');
-  } catch (error) {
-    console.error('Database connection failed:', error);
-    process.exit(1);
+    cached.conn = await cached.promise;
+  } catch (e) {
+    cached.promise = null;
+    throw e;
   }
+
+  return cached.conn;
 }
 
-export default dbConnect;
+export default connectToDatabase;

@@ -1,135 +1,77 @@
-import { withAuth } from 'next-auth/middleware';
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+// src/middleware.ts
+import { getToken } from 'next-auth/jwt';
+import { NextRequest, NextResponse } from 'next/server';
 
-export default withAuth(
-  function middleware(req: NextRequest & { nextauth: any }) {
-    const token = req.nextauth.token;
-    const { pathname } = req.nextUrl;
+const authRoutes = ['/auth/login', '/auth/signup', '/auth/forgot-password', '/auth/verify-otp'];
+const protectedRoutes = ['/admin', '/client', '/hr', '/employee', '/dashboard', '/api/admin', '/api/user'];
+const roleRoutes = {
+  admin: ['/admin'],
+  client: ['/client'],
+  hr: ['/hr'],
+  employee: ['/employee']
+};
 
-    // Public routes that don't require authentication
-    const publicRoutes = [
-      '/',
-      '/auth/signin',
-      '/auth/signup',
-      '/auth/admin-signup',
-      '/auth/verify-otp',
-      '/auth/error',
-      '/api/auth/signup',
-      '/api/auth/admin-signup',
-      '/api/auth/verify-otp',
-      '/api/auth/resend-otp',
-    ];
+export async function middleware(request: NextRequest) {
+  const path = request.nextUrl.pathname;
+  const isAuthRoute = authRoutes.some(route => path.startsWith(route));
+  const isProtectedRoute = protectedRoutes.some(route => path.startsWith(route));
 
-    // API routes that don't require authentication
-    const publicApiRoutes = [
-      '/api/auth/signup',
-      '/api/auth/admin-signup',
-      '/api/auth/verify-otp',
-      '/api/auth/resend-otp',
-    ];
-
-    // Check if the route is public
-    if (publicRoutes.includes(pathname) || publicApiRoutes.some(route => pathname.startsWith(route))) {
-      return NextResponse.next();
-    }
-
-    // If no token and trying to access protected route, redirect to signin
-    if (!token && !pathname.startsWith('/auth/')) {
-      const signInUrl = new URL('/auth/signin', req.url);
-      signInUrl.searchParams.set('callbackUrl', pathname);
-      return NextResponse.redirect(signInUrl);
-    }
-
-    // Role-based access control
-    if (token) {
-      const userRole = token.role as string;
-
-      // Admin-only routes
-      if (pathname.startsWith('/admin') || pathname.startsWith('/api/admin')) {
-        if (userRole !== 'admin') {
-          return NextResponse.redirect(new URL('/unauthorized', req.url));
-        }
-      }
-
-      // HR-only routes
-      if (pathname.startsWith('/hr') || pathname.startsWith('/api/hr')) {
-        if (!['admin', 'hr'].includes(userRole)) {
-          return NextResponse.redirect(new URL('/unauthorized', req.url));
-        }
-      }
-
-      // Employee-only routes
-      if (pathname.startsWith('/employee') || pathname.startsWith('/api/employee')) {
-        if (!['admin', 'hr', 'employee'].includes(userRole)) {
-          return NextResponse.redirect(new URL('/unauthorized', req.url));
-        }
-      }
-
-      // Client-only routes
-      if (pathname.startsWith('/client') || pathname.startsWith('/api/client')) {
-        if (!['admin', 'hr', 'client'].includes(userRole)) {
-          return NextResponse.redirect(new URL('/unauthorized', req.url));
-        }
-      }
-
-      // Check if profile is complete for protected routes
-      if (!token.isProfileComplete && !pathname.startsWith('/profile/complete') && 
-          !pathname.startsWith('/api/user/complete-profile')) {
-        return NextResponse.redirect(new URL('/profile/complete', req.url));
-      }
-
-      // Check if account is active
-      if (!token.isActive && !pathname.startsWith('/account/inactive')) {
-        return NextResponse.redirect(new URL('/account/inactive', req.url));
-      }
-    }
-
+  // Skip middleware for public API routes and auth API routes
+  if (path.startsWith('/api') && !path.startsWith('/api/admin') && !path.startsWith('/api/user')) {
     return NextResponse.next();
-  },
-  {
-    callbacks: {
-      authorized: ({ token, req }) => {
-        const { pathname } = req.nextUrl;
-        
-        // Allow access to public routes without token
-        const publicRoutes = [
-          '/',
-          '/auth/signin',
-          '/auth/signup',
-          '/auth/admin-signup',
-          '/auth/verify-otp',
-          '/auth/error',
-        ];
-
-        const publicApiRoutes = [
-          '/api/auth/signup',
-          '/api/auth/admin-signup',
-          '/api/auth/verify-otp',
-          '/api/auth/resend-otp',
-        ];
-
-        if (publicRoutes.includes(pathname) || 
-            publicApiRoutes.some(route => pathname.startsWith(route))) {
-          return true;
-        }
-
-        // Require token for all other routes
-        return !!token;
-      },
-    },
   }
-);
+
+  const token = await getToken({ req: request });
+
+  // Redirect authenticated users away from auth routes to their role dashboard
+  if (isAuthRoute && token) {
+    const userRole = token.role as string;
+    if (userRole && ['admin', 'client', 'hr', 'employee'].includes(userRole)) {
+      return NextResponse.redirect(new URL(`/${userRole}`, request.url));
+    }
+    return NextResponse.redirect(new URL('/dashboard', request.url));
+  }
+
+  // Protect routes that require authentication
+  if (isProtectedRoute && !token) {
+    return NextResponse.redirect(new URL('/auth/login', request.url));
+  }
+
+  // Role-based access control
+  if (token && token.role) {
+    const userRole = token.role as string;
+    
+    // Check if user is accessing a role-specific route
+    for (const [role, routes] of Object.entries(roleRoutes)) {
+      if (routes.some(route => path.startsWith(route))) {
+        if (userRole !== role) {
+          // Redirect to user's correct dashboard
+          return NextResponse.redirect(new URL(`/${userRole}`, request.url));
+        }
+      }
+    }
+    
+    // Redirect /dashboard to role-specific dashboard
+    if (path === '/dashboard') {
+      return NextResponse.redirect(new URL(`/${userRole}`, request.url));
+    }
+  }
+
+  return NextResponse.next();
+}
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public files (public folder)
-     */
-    '/((?!_next/static|_next/image|favicon.ico|public/).*)',
+    '/admin/:path*',
+    '/client/:path*',
+    '/hr/:path*',
+    '/employee/:path*',
+    '/dashboard/:path*',
+    '/api/admin/:path*',
+    '/api/user/:path*',
+    '/auth/login',
+    '/auth/signup',
+    '/auth/forgot-password',
+    '/auth/verify-otp'
   ],
 };

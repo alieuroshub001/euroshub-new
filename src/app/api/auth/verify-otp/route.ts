@@ -1,91 +1,90 @@
-import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '../../../../lib/db';
-import PendingUser from '../../../../models/PendingUser';
-import { isValidOTP } from '../../../../utils/validation';
-import { OTPVerificationRequest } from '../../../../types/auth';
-import { HTTP_STATUS, ERROR_MESSAGES, SUCCESS_MESSAGES } from '../../../../utils/constants';
+import { NextResponse } from 'next/server';
+import connectToDatabase from '@/lib/db';
+import { verifyOTP, hashPassword } from '@/lib/auth';
+import User from '@/models/User';
+import { IApiResponse } from '@/types';
 
-export async function POST(req: NextRequest) {
+export async function POST(request: Request) {
   try {
-    await dbConnect();
-    
-    const body: OTPVerificationRequest = await req.json();
-    
-    // Validate input
-    if (!body.email || !body.otp) {
-      return NextResponse.json(
-        { success: false, message: 'Email and OTP are required' },
-        { status: HTTP_STATUS.BAD_REQUEST }
-      );
+    await connectToDatabase();
+    const { email, otp, type, newPassword, userEmail } = await request.json();
+
+    // Verify OTP first for both flows
+    const isValid = await verifyOTP(email, otp, type);
+    if (!isValid) {
+      return NextResponse.json<IApiResponse>({
+        success: false,
+        message: 'Invalid or expired OTP'
+      }, { status: 400 });
     }
 
-    if (!isValidOTP(body.otp)) {
-      return NextResponse.json(
-        { success: false, message: ERROR_MESSAGES.INVALID_OTP },
-        { status: HTTP_STATUS.BAD_REQUEST }
+    if (type === 'verification') {
+      // For admin users, email is the OTP email, but we need to find user by their actual email
+      const findByEmail = userEmail || email;
+      
+      // Handle email verification
+      const user = await User.findOneAndUpdate(
+        { email: findByEmail },
+        { emailVerified: true },
+        { new: true }
       );
-    }
-
-    // Find pending user
-    const pendingUser = await PendingUser.findOne({ 
-      email: body.email.toLowerCase() 
-    });
-
-    if (!pendingUser) {
-      return NextResponse.json(
-        { success: false, message: ERROR_MESSAGES.USER_NOT_FOUND },
-        { status: HTTP_STATUS.NOT_FOUND }
-      );
-    }
-
-    // Check if OTP is already verified
-    if (pendingUser.isOtpVerified) {
-      return NextResponse.json(
-        { success: false, message: 'OTP already verified. Waiting for admin approval.' },
-        { status: HTTP_STATUS.CONFLICT }
-      );
-    }
-
-    // Check if OTP has expired
-    if (pendingUser.isOTPExpired()) {
-      return NextResponse.json(
-        { success: false, message: ERROR_MESSAGES.OTP_EXPIRED },
-        { status: HTTP_STATUS.BAD_REQUEST }
-      );
-    }
-
-    // Verify OTP
-    if (pendingUser.otpCode !== body.otp) {
-      return NextResponse.json(
-        { success: false, message: 'Invalid OTP' },
-        { status: HTTP_STATUS.BAD_REQUEST }
-      );
-    }
-
-    // Mark OTP as verified
-    pendingUser.isOtpVerified = true;
-    await pendingUser.save();
-
-    return NextResponse.json(
-      {
+      
+      if (!user) {
+        return NextResponse.json<IApiResponse>({
+          success: false,
+          message: 'User not found'
+        }, { status: 404 });
+      }
+      
+      const message = user.role === 'admin' 
+        ? 'Email verified successfully. You can now login.'
+        : 'Email verified successfully. You can login once admin assigns your ID.';
+      
+      return NextResponse.json<IApiResponse>({
         success: true,
-        message: SUCCESS_MESSAGES.OTP_VERIFIED,
-        data: {
-          email: pendingUser.email,
-          firstName: pendingUser.firstName,
-          lastName: pendingUser.lastName,
-          role: pendingUser.role,
-          status: pendingUser.status,
-        },
-      },
-      { status: HTTP_STATUS.OK }
-    );
+        message,
+        data: { 
+          requiresIdAssignment: user.role !== 'admin' && !user.idAssigned 
+        }
+      });
+    } 
+    else if (type === 'password-reset' && newPassword) {
+      // For admin users, email is the OTP email, but we need to find user by their actual email
+      const findByEmail = userEmail || email;
+      
+      // Handle password reset
+      const hashedPassword = await hashPassword(newPassword);
+      const user = await User.findOneAndUpdate(
+        { email: findByEmail },
+        { password: hashedPassword }
+      );
+      
+      if (!user) {
+        return NextResponse.json<IApiResponse>({
+          success: false,
+          message: 'User not found'
+        }, { status: 404 });
+      }
+      
+      return NextResponse.json<IApiResponse>({
+        success: true,
+        message: 'Password reset successfully. You can now login with your new password.'
+      });
+    }
+    else {
+      // For password reset flow when just verifying OTP without password yet
+      return NextResponse.json<IApiResponse>({
+        success: true,
+        message: 'OTP verified successfully. Please set your new password.'
+      });
+    }
 
   } catch (error) {
     console.error('OTP verification error:', error);
-    return NextResponse.json(
-      { success: false, message: ERROR_MESSAGES.DATABASE_ERROR },
-      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
-    );
+    return NextResponse.json<IApiResponse>({
+      success: false,
+      message: 'Internal server error',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 });
   }
 }

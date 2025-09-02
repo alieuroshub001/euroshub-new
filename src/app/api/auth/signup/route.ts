@@ -1,100 +1,102 @@
-import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '../../../../lib/db';
-import PendingUser from '../../../../models/PendingUser';
-import { validateSignupRequest } from '../../../../utils/validation';
-import { generateOTP, getOTPExpiry } from '../../../../utils/auth';
-import { sendEmail } from '../../../../lib/email';
-import { SignupRequest, EmailNotification } from '../../../../types/auth';
-import { HTTP_STATUS, ERROR_MESSAGES, SUCCESS_MESSAGES } from '../../../../utils/constants';
+// app/api/auth/signup/route.ts
+import { NextResponse } from 'next/server';
+import connectToDatabase from '@/lib/db';
+import { createOTPRecord, hashPassword } from '@/lib/auth';
+import User from '@/models/User';
+import { IApiResponse } from '@/types';
+import { sendNewSignupNotificationToAdmin } from '@/lib/email';
 
-export async function POST(req: NextRequest) {
+export async function POST(request: Request) {
   try {
-    await dbConnect();
-    
-    const body: SignupRequest = await req.json();
-    
-    // Validate the request
-    const validation = validateSignupRequest(body);
-    if (validation.errors.length > 0) {
-      return NextResponse.json(
-        { success: false, message: validation.errors[0], errors: validation.errors },
-        { status: HTTP_STATUS.BAD_REQUEST }
-      );
+    await connectToDatabase();
+    const { name, fullname, number, email, password, role } = await request.json();
+
+    // Validate input
+    if (!name || !fullname || !number || !email || !password || !role) {
+      return NextResponse.json<IApiResponse>({
+        success: false,
+        message: 'All fields are required'
+      }, { status: 400 });
     }
 
-    // Check if user already exists in PendingUser or User
-    const existingPendingUser = await PendingUser.findOne({ 
-      email: body.email.toLowerCase() 
+    // Validate role
+    if (!['admin', 'client', 'hr', 'employee'].includes(role)) {
+      return NextResponse.json<IApiResponse>({
+        success: false,
+        message: 'Invalid role'
+      }, { status: 400 });
+    }
+
+    // Validate email format for hr and employee roles
+    if ((role === 'hr' || role === 'employee') && !/\S+euroshub@gmail\.com$/.test(email)) {
+      return NextResponse.json<IApiResponse>({
+        success: false,
+        message: 'HR and Employee must use euroshub email format (e.g., name.euroshub@gmail.com)'
+      }, { status: 400 });
+    }
+
+    // Check if user exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return NextResponse.json<IApiResponse>({
+        success: false,
+        message: 'User already exists'
+      }, { status: 400 });
+    }
+
+    // Create user
+    const hashedPassword = await hashPassword(password);
+    const newUser = await User.create({
+      name,
+      fullname,
+      number,
+      email,
+      password: hashedPassword,
+      role,
+      emailVerified: false,
+      idAssigned: false
     });
 
-    if (existingPendingUser) {
-      if (existingPendingUser.isOtpVerified && existingPendingUser.status === 'pending') {
-        return NextResponse.json(
-          { success: false, message: 'Registration already submitted. Waiting for admin approval.' },
-          { status: HTTP_STATUS.CONFLICT }
-        );
+    // Determine OTP email - for admin use ADMIN_OTP_EMAIL, for others use their email
+    const otpEmail = role === 'admin' ? process.env.ADMIN_OTP_EMAIL : email;
+    
+    // Generate and send OTP
+    await createOTPRecord(otpEmail!, 'verification');
+
+    // Send notification to admin for non-admin user signups
+    if (role !== 'admin') {
+      try {
+        await sendNewSignupNotificationToAdmin({
+          userFullname: fullname,
+          userEmail: email,
+          userRole: role,
+          userNumber: number,
+          signupDate: new Date()
+        });
+      } catch (emailError) {
+        console.error('Failed to send admin notification email:', emailError);
+        // Don't fail signup if admin email fails
       }
-      
-      // If OTP not verified, allow re-registration
-      await PendingUser.findByIdAndDelete(existingPendingUser._id);
     }
 
-    // Generate OTP
-    const otpCode = generateOTP();
-    const otpExpiry = getOTPExpiry();
-
-    // Create pending user
-    const pendingUser = new PendingUser({
-      email: body.email.toLowerCase(),
-      password: body.password,
-      role: body.role,
-      firstName: body.firstName,
-      lastName: body.lastName,
-      phone: body.phone,
-      otpCode,
-      otpExpiry,
-      isOtpVerified: false,
-      status: 'pending',
+    return NextResponse.json<IApiResponse>({
+      success: true,
+      message: role === 'admin' 
+        ? `Admin user created. Please check ${process.env.ADMIN_OTP_EMAIL} for verification OTP.`
+        : 'User created. Please check your email for verification OTP. Admin will assign your ID shortly.',
+      data: { 
+        userId: newUser._id,
+        requiresIdAssignment: role !== 'admin',
+        adminOtpEmail: role === 'admin' ? process.env.ADMIN_OTP_EMAIL : undefined
+      }
     });
-
-    await pendingUser.save();
-
-    // Send OTP email
-    const emailNotification: EmailNotification = {
-      to: body.email,
-      subject: 'EurosHub - Email Verification Code',
-      template: 'otp',
-      data: {
-        firstName: body.firstName,
-        otpCode,
-      },
-    };
-
-    const emailSent = await sendEmail(emailNotification);
-    
-    if (!emailSent) {
-      // If email failed, delete the pending user
-      await PendingUser.findByIdAndDelete(pendingUser._id);
-      return NextResponse.json(
-        { success: false, message: ERROR_MESSAGES.EMAIL_SEND_FAILED },
-        { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
-      );
-    }
-
-    return NextResponse.json(
-      {
-        success: true,
-        message: SUCCESS_MESSAGES.SIGNUP_SUCCESS,
-        tempUserId: pendingUser._id,
-      },
-      { status: HTTP_STATUS.CREATED }
-    );
 
   } catch (error) {
     console.error('Signup error:', error);
-    return NextResponse.json(
-      { success: false, message: ERROR_MESSAGES.DATABASE_ERROR },
-      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
-    );
+    return NextResponse.json<IApiResponse>({
+      success: false,
+      message: 'Internal server error',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 });
   }
 }
