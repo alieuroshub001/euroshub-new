@@ -50,7 +50,7 @@ export default function UserFilters({ filters, onFiltersChange, userCounts }: Us
           </label>
           <select
             value={filters.role || ''}
-            onChange={(e) => handleRoleChange(e.target.value as any || undefined)}
+            onChange={(e) => handleRoleChange((e.target.value as 'client' | 'hr' | 'employee') || undefined)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="">All Roles</option>
@@ -67,7 +67,7 @@ export default function UserFilters({ filters, onFiltersChange, userCounts }: Us
           </label>
           <select
             value={filters.status || ''}
-            onChange={(e) => handleStatusChange(e.target.value as any || undefined)}
+            onChange={(e) => handleStatusChange((e.target.value as 'pending' | 'approved' | 'declined' | 'blocked') || undefined)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="">All Status</option>

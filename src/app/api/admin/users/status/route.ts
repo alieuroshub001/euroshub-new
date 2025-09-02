@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update user status
-    const updateData: any = {
+    const updateData: Record<string, unknown> = {
       accountStatus: status,
       statusUpdatedBy: token.id,
       statusUpdatedAt: new Date()

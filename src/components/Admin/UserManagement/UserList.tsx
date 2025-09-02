@@ -89,7 +89,7 @@ export default function UserList() {
       fetchUsers(pagination.current, true);
       fetchUserCounts();
     }, 30000); // Refresh every 30 seconds
-  }, [fetchUsers, fetchUserCounts, pagination.current]);
+  }, [fetchUsers, fetchUserCounts, pagination]);
 
   const stopAutoRefresh = useCallback(() => {
     if (intervalRef.current) {

@@ -3,7 +3,7 @@ import { getToken } from 'next-auth/jwt';
 import { NextRequest } from 'next/server';
 import connectToDatabase from '@/lib/db';
 import User from '@/models/User';
-import { IApiResponse, IUserManagementFilters } from '@/types';
+import { IApiResponse } from '@/types';
 
 // GET all users with filters (for admin only)
 export async function GET(request: NextRequest) {
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '10');
 
     // Build query
-    const query: any = { role: { $ne: 'admin' } }; // Exclude admin users
+    const query: Record<string, unknown> = { role: { $ne: 'admin' } }; // Exclude admin users
     
     if (role) query.role = role;
     if (status) query.accountStatus = status;

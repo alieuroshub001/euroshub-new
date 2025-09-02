@@ -28,7 +28,7 @@ export async function PUT(request: NextRequest) {
 
     // Validate updates - only allow specific fields to be updated
     const allowedFields = ['fullname', 'email', 'number', 'role'];
-    const filteredUpdates: any = {};
+    const filteredUpdates: Record<string, unknown> = {};
 
     Object.keys(updates).forEach(key => {
       if (allowedFields.includes(key)) {
@@ -71,10 +71,10 @@ export async function PUT(request: NextRequest) {
       data: updatedUser
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error updating user:', error);
     return NextResponse.json(
-      { success: false, message: error.message || 'Internal server error' },
+      { success: false, message: error instanceof Error ? error.message : 'Internal server error' },
       { status: 500 }
     );
   }

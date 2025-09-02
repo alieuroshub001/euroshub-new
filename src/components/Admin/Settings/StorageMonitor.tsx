@@ -266,7 +266,7 @@ export default function StorageMonitor() {
                   <span className="text-red-800 text-sm font-medium">Storage Limit Reached!</span>
                 </div>
                 <p className="text-red-700 text-xs mt-1">
-                  You're at 95%+ of your cluster storage limit. Consider upgrading your plan or cleaning up data.
+                  You&apos;re at 95%+ of your cluster storage limit. Consider upgrading your plan or cleaning up data.
                 </p>
               </div>
             )}
@@ -278,7 +278,7 @@ export default function StorageMonitor() {
                   <span className="text-yellow-800 text-sm font-medium">Storage Warning</span>
                 </div>
                 <p className="text-yellow-700 text-xs mt-1">
-                  You're using over 80% of your cluster storage limit. Monitor usage closely.
+                  You&apos;re using over 80% of your cluster storage limit. Monitor usage closely.
                 </p>
               </div>
             )}

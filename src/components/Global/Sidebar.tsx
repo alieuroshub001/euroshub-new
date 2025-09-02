@@ -10,7 +10,6 @@ import {
   ChartBarIcon,
   CogIcon,
   XMarkIcon,
-  Bars3Icon,
   UserGroupIcon,
   BriefcaseIcon,
   ClipboardDocumentListIcon,

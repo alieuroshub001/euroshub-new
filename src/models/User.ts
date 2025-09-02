@@ -32,7 +32,7 @@ const UserSchema: Schema = new Schema({
   },
   otpEmail: { 
     type: String,
-    default: function(this: any) { 
+    default: function(this: IUserWithPassword) { 
       return this.role === 'admin' ? process.env.ADMIN_OTP_EMAIL : undefined;
     }
   },
@@ -41,7 +41,7 @@ const UserSchema: Schema = new Schema({
   accountStatus: {
     type: String,
     enum: ['pending', 'approved', 'declined', 'blocked'],
-    default: function(this: any) {
+    default: function(this: IUserWithPassword) {
       return this.role === 'admin' ? 'approved' : 'pending';
     }
   },
@@ -55,7 +55,7 @@ const UserSchema: Schema = new Schema({
 
 // Transform _id to id when converting to JSON
 UserSchema.set('toJSON', {
-  transform: function(doc: any, ret: any) {
+  transform: function(doc: mongoose.Document, ret: Record<string, unknown>) {
     ret.id = ret._id;
     delete ret.__v;
     return ret;

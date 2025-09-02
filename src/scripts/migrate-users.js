@@ -1,7 +1,7 @@
 // Migration script to add new fields to existing users
 // Run this once to update existing user documents
 
-const { MongoClient } = require('mongodb');
+import { MongoClient } from 'mongodb';
 
 async function migrateUsers() {
   const client = new MongoClient(process.env.MONGODB_URI);

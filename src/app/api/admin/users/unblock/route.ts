@@ -54,10 +54,10 @@ export async function POST(request: NextRequest) {
       data: user
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error unblocking user:', error);
     return NextResponse.json(
-      { success: false, message: error.message || 'Internal server error' },
+      { success: false, message: error instanceof Error ? error.message : 'Internal server error' },
       { status: 500 }
     );
   }

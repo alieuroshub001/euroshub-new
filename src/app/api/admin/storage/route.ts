@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth';
 import connectToDatabase from '@/lib/db';
 import mongoose from 'mongoose';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const session = await getServerSession(authOptions);
 
@@ -18,6 +18,9 @@ export async function GET(request: NextRequest) {
     await connectToDatabase();
 
     // Get the admin database to list all databases
+    if (!mongoose.connection.db) {
+      throw new Error('Database connection not established');
+    }
     const adminDb = mongoose.connection.db.admin();
     const currentDb = mongoose.connection.db;
     
@@ -44,7 +47,7 @@ export async function GET(request: NextRequest) {
         }
 
         // Get database reference
-        const db = mongoose.connection.client.db(dbInfo.name);
+        const db = mongoose.connection.getClient().db(dbInfo.name);
         
         // Get database statistics
         const stats = await db.stats();
@@ -55,7 +58,7 @@ export async function GET(request: NextRequest) {
 
         for (const collection of collections) {
           try {
-            const collectionStat = await db.collection(collection.name).stats();
+            const collectionStat = await db.command({ collStats: collection.name });
             collectionStats.push({
               name: collection.name,
               documents: collectionStat.count || 0,
@@ -80,7 +83,7 @@ export async function GET(request: NextRequest) {
           totalSize: (stats.dataSize || 0) + (stats.indexSize || 0),
           avgObjSize: stats.avgObjSize || 0,
           collectionsDetail: collectionStats,
-          isCurrentDatabase: dbInfo.name === currentDb.databaseName
+          isCurrentDatabase: dbInfo.name === currentDb?.databaseName
         };
 
         allDatabases.push(databaseData);
@@ -101,7 +104,7 @@ export async function GET(request: NextRequest) {
           totalSize: 0,
           avgObjSize: 0,
           collectionsDetail: [],
-          isCurrentDatabase: dbInfo.name === currentDb.databaseName,
+          isCurrentDatabase: dbInfo.name === currentDb?.databaseName,
           error: 'Could not fetch detailed statistics'
         });
       }
@@ -120,7 +123,17 @@ export async function GET(request: NextRequest) {
     // This matches what MongoDB Atlas shows in their dashboard
     const actualClusterUsage = totalDataSize; // This is the sum of dataSize from each database
     
-    const clusterUsage = {
+    const clusterUsage: {
+      totalSizeOnDisk: number;
+      totalDataSize: number;
+      clusterLimit: number;
+      availableSpace: number;
+      usedPercentage: number;
+      isNearLimit: boolean;
+      isAtLimit: boolean;
+      cacheSize?: number;
+      cacheUsed?: number;
+    } = {
       totalSizeOnDisk: totalInstanceSize || 0, // Physical disk usage (for reference)
       totalDataSize: actualClusterUsage, // Actual logical data size (what Atlas shows)
       clusterLimit: clusterStorageLimit,
@@ -147,7 +160,7 @@ export async function GET(request: NextRequest) {
         totalSize: totalDataSize, // Actual data size (matches Atlas dashboard)
         totalSizeOnDisk: clusterUsage.totalSizeOnDisk, // Physical disk usage (for reference)
         totalObjects: totalInstanceObjects,
-        currentDatabase: currentDb.databaseName,
+        currentDatabase: currentDb?.databaseName || 'Unknown',
         clusterUsage: clusterUsage
       },
       databases: allDatabases.sort((a, b) => {
@@ -170,10 +183,10 @@ export async function GET(request: NextRequest) {
       data: storageInfo
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error fetching storage statistics:', error);
     return NextResponse.json(
-      { success: false, message: error.message || 'Internal server error' },
+      { success: false, message: error instanceof Error ? error.message : 'Internal server error' },
       { status: 500 }
     );
   }

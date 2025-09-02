@@ -27,7 +27,7 @@ export default async function HRDashboard() {
           <h3 className="font-semibold text-yellow-800">Pending Employee ID Assignment</h3>
           <p className="mt-2 text-sm text-yellow-700">
             Your account is waiting for admin to assign your employee ID. 
-            You'll receive an email notification once it's assigned.
+            You&apos;ll receive an email notification once it&apos;s assigned.
           </p>
         </div>
       );
