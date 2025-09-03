@@ -1,36 +1,33 @@
 "use client"
-import { useEffect, useState, Suspense } from 'react';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { useEffect, useState, useRef, createContext, useContext } from 'react';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
-function LoadingProviderInner({ children }: { children: React.ReactNode }) {
+const LoadingContext = createContext({
+  setLoading: (loading: boolean) => {}
+});
+
+export const useLoading = () => useContext(LoadingContext);
+
+export default function NextLoadingProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(false);
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const setLoading = (loading: boolean) => {
+    if (loading) {
+      setIsLoading(true);
+    } else {
+      // Small delay to prevent flashing
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      timeoutRef.current = setTimeout(() => {
+        setIsLoading(false);
+      }, 150);
+    }
+  };
 
   useEffect(() => {
-    const startLoading = () => {
-      setIsLoading(true);
-    };
-
-    // Override the Next.js router methods
-    const originalPush = window.history.pushState;
-    const originalReplace = window.history.replaceState;
-
-    window.history.pushState = function(data, unused, url) {
-      startLoading();
-      originalPush.call(this, data, unused, url);
-    };
-
-    window.history.replaceState = function(data, unused, url) {
-      startLoading();
-      originalReplace.call(this, data, unused, url);
-    };
-
-    // Listen for popstate (back/forward buttons)
-    const handlePopState = () => {
-      startLoading();
-    };
+    // Listen for Next.js route changes
+    const handleRouteChangeStart = () => setLoading(true);
+    const handleRouteChangeComplete = () => setLoading(false);
 
     // Listen for link clicks
     const handleClick = (e: MouseEvent) => {
@@ -46,44 +43,32 @@ function LoadingProviderInner({ children }: { children: React.ReactNode }) {
           !e.metaKey && 
           !e.shiftKey &&
           e.button === 0) {
-        startLoading();
+        setLoading(true);
+        // Auto-hide after reasonable time if route change doesn't complete
+        setTimeout(() => setLoading(false), 3000);
       }
     };
 
+    // Listen for back/forward button navigation
+    const handlePopState = () => {
+      setLoading(true);
+      setTimeout(() => setLoading(false), 1000);
+    };
+
+    document.addEventListener('click', handleClick);
     window.addEventListener('popstate', handlePopState);
-    document.addEventListener('click', handleClick, { capture: true });
 
     return () => {
-      window.history.pushState = originalPush;
-      window.history.replaceState = originalReplace;
+      document.removeEventListener('click', handleClick);
       window.removeEventListener('popstate', handlePopState);
-      document.removeEventListener('click', handleClick, { capture: true });
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
   }, []);
 
-  // Stop loading when pathname or searchParams change (navigation completed)
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      setIsLoading(false);
-    }, 100);
-
-    return () => clearTimeout(timeoutId);
-  }, [pathname, searchParams]);
-
   return (
-    <>
+    <LoadingContext.Provider value={{ setLoading }}>
       {isLoading && <LoadingSpinner />}
       {children}
-    </>
-  );
-}
-
-export default function NextLoadingProvider({ children }: { children: React.ReactNode }) {
-  return (
-    <Suspense fallback={null}>
-      <LoadingProviderInner>
-        {children}
-      </LoadingProviderInner>
-    </Suspense>
+    </LoadingContext.Provider>
   );
 }
