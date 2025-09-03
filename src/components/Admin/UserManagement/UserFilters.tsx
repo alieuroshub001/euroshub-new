@@ -81,7 +81,7 @@ export default function UserFilters({ filters, onFiltersChange, userCounts }: Us
         {/* Clear Filters */}
         <div className="flex items-end">
           <button
-            onClick={() => onFiltersChange({})}
+            onClick={() => onFiltersChange({ search: '', role: '', status: '', idAssigned: '' })}
             className="w-full px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
           >
             Clear Filters

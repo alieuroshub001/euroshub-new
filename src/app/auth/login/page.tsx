@@ -1,19 +1,12 @@
 import LoginForm from '@/components/auth/Login';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import { redirect } from 'next/navigation';
+import AuthGuard from '@/components/auth/AuthGuard';
 
-export default async function LoginPage() {
-  const session = await getServerSession(authOptions);
-
-  // If user is already logged in, redirect to dashboard
-  if (session) {
-    redirect('/dashboard');
-  }
-
+export default function LoginPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <LoginForm />
-    </div>
+    <AuthGuard>
+      <div className="min-h-screen bg-gray-50">
+        <LoginForm />
+      </div>
+    </AuthGuard>
   );
 }

@@ -1,19 +1,14 @@
-import SignupForm from '@/components/auth/Signup';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import { redirect } from 'next/navigation';
+import AuthGuard from '@/components/auth/AuthGuard';
 
-export default async function SignupPage() {
-  const session = await getServerSession(authOptions);
-
-  // If user is already logged in, redirect to dashboard
-  if (session) {
-    redirect('/dashboard');
-  }
-
+export default function SignupPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <SignupForm />
-    </div>
+    <AuthGuard>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="bg-white p-8 rounded-lg shadow-lg">
+          <h1 className="text-2xl font-bold mb-4">Sign Up</h1>
+          <p>Signup form would go here. This is a placeholder to test the loading spinner.</p>
+        </div>
+      </div>
+    </AuthGuard>
   );
 }

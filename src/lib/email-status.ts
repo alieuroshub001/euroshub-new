@@ -12,7 +12,7 @@ export async function sendStatusUpdateEmail({
 }: {
   email: string;
   fullname: string;
-  status: 'approved' | 'declined' | 'blocked';
+  status: 'approved' | 'declined' | 'blocked' | 'active' | 'inactive';
   role: string;
 }): Promise<IApiResponse> {
   const subject = `Account Status Update - ${status.charAt(0).toUpperCase() + status.slice(1)}`;
@@ -39,6 +39,27 @@ export async function sendStatusUpdateEmail({
           bgColor: '#fef2f2',
           message: 'Your account has been blocked by the admin.',
           action: 'Please contact the admin to resolve this issue.'
+        };
+      case 'active':
+        return {
+          color: '#059669',
+          bgColor: '#f0fdf4',
+          message: 'Your account has been activated.',
+          action: 'You can now use your account normally.'
+        };
+      case 'inactive':
+        return {
+          color: '#d97706',
+          bgColor: '#fffbeb',
+          message: 'Your account has been deactivated.',
+          action: 'Please contact the admin if you need to reactivate your account.'
+        };
+      default:
+        return {
+          color: '#6b7280',
+          bgColor: '#f9fafb',
+          message: 'Your account status has been updated.',
+          action: 'Please contact the admin for more information.'
         };
     }
   };
@@ -76,9 +97,5 @@ export async function sendStatusUpdateEmail({
     </div>
   `;
 
-  return await sendEmail({
-    to: email,
-    subject,
-    html,
-  });
+  return await sendEmail(email, subject);
 }

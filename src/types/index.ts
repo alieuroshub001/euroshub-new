@@ -1,73 +1,13 @@
-// types/index.ts
-// Update your types/index.ts
-export interface IUser {
-  _id?: string; // MongoDB ObjectId
-  id: string;
-  name: string;
-  fullname: string;
-  number: string;
-  email: string;
-  role: 'admin' | 'client' | 'hr' | 'employee';
-  emailVerified: boolean;
-  verificationToken?: string;
-  employeeId?: string; // For hr and employee roles - assigned by admin
-  clientId?: string; // For client role - assigned by admin
-  otpEmail?: string; // Admin's special email for OTP
-  idAssigned: boolean; // Whether admin has assigned ID to user
-  idAssignedAt?: Date; // When ID was assigned
-  accountStatus: 'pending' | 'approved' | 'declined' | 'blocked';
-  statusUpdatedBy?: string;
-  statusUpdatedAt?: Date;
-  createdAt: Date;
-  updatedAt: Date;
+export interface IApiResponse<T = unknown> {
+  success: boolean;
+  message: string;
+  data?: T;
+  error?: string;
 }
 
-export interface IUserWithPassword extends IUser {
-  password: string;
-  confirmPassword: string;
-}
-
-// Auth session types
-export interface ISessionUser {
-  id: string;
-  name: string;
-  fullname: string;
-  number: string;
-  email: string;
-  role: 'admin' | 'client' | 'hr' | 'employee';
-  employeeId?: string;
-  clientId?: string;
-  otpEmail?: string;
-  idAssigned: boolean;
-  accountStatus: 'pending' | 'approved' | 'declined' | 'blocked';
-}
-
-export interface ISession {
-  user: ISessionUser;
-  expires: string;
-}
-
-// OTP and password reset types
-export interface IOTP {
-  id: string;
-  email: string;
-  otp: string;
-  type: 'verification' | 'password-reset';
-  expiresAt: Date;
-  createdAt: Date;
-}
-
-export interface IPasswordResetToken {
-  id: string;
-  email: string;
-  token: string;
-  expiresAt: Date;
-  createdAt: Date;
-}
-
-// ID Assignment types
 export interface IIdAssignmentRequest {
   userId: string;
+  assignedId?: string;
   employeeId?: string;
   clientId?: string;
 }
@@ -75,28 +15,83 @@ export interface IIdAssignmentRequest {
 export interface IIdAssignmentResponse {
   userId: string;
   assignedId: string;
-  idType: 'employee' | 'client';
-  emailSent: boolean;
+  email?: string;
+  name?: string;
+  idType?: string;
+  emailSent?: boolean;
 }
 
-// User Management types
+export interface IOTP {
+  email: string;
+  otp: string;
+  type: 'verification' | 'password-reset';
+  expiresAt: Date;
+  isUsed: boolean;
+}
+
 export interface IUserStatusUpdateRequest {
   userId: string;
-  status: 'approved' | 'declined' | 'blocked';
+  status: 'active' | 'inactive' | 'blocked' | 'approved' | 'declined';
   employeeId?: string;
   clientId?: string;
 }
 
-export interface IUserManagementFilters {
-  role?: 'client' | 'hr' | 'employee';
-  status?: 'pending' | 'approved' | 'declined' | 'blocked';
-  search?: string;
+export interface IUserWithPassword {
+  _id?: string;
+  name: string;
+  fullname: string;
+  number: string;
+  email: string;
+  password: string;
+  role: 'admin' | 'hr' | 'employee' | 'client';
+  employeeId?: string;
+  clientId?: string;
+  idAssigned?: boolean;
+  isVerified?: boolean;
+  emailVerified?: boolean;
+  verificationToken?: string;
+  status?: 'active' | 'inactive' | 'blocked' | 'approved' | 'declined' | 'pending';
+  accountStatus?: 'active' | 'inactive' | 'blocked' | 'approved' | 'declined' | 'pending';
+  createdAt?: Date;
+  updatedAt?: Date;
+  save?: () => Promise<unknown>;
 }
 
-// API response types
-export interface IApiResponse<T = unknown> {
-  success: boolean;
-  message: string;
-  data?: T;
-  error?: string;
+export interface ISessionUser {
+  id: string;
+  name: string;
+  fullname: string;
+  number: string;
+  email: string;
+  role: 'admin' | 'hr' | 'employee' | 'client';
+  employeeId?: string;
+  clientId?: string;
+  idAssigned?: boolean;
+  accountStatus?: string;
+}
+
+export interface IUser {
+  _id: string;
+  id: string;
+  name: string;
+  fullname: string;
+  number: string;
+  email: string;
+  role: 'admin' | 'hr' | 'employee' | 'client';
+  employeeId?: string;
+  clientId?: string;
+  idAssigned?: boolean;
+  isVerified?: boolean;
+  emailVerified?: boolean;
+  status?: string;
+  accountStatus: string;
+  createdAt: Date;
+  updatedAt?: Date;
+}
+
+export interface IUserManagementFilters {
+  search?: string;
+  role?: string;
+  status?: string;
+  idAssigned?: string;
 }

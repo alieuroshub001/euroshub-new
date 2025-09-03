@@ -1,6 +1,4 @@
 import VerifyOTPForm from '@/components/auth/VerifyOTP';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 
 interface PageProps {
@@ -12,13 +10,6 @@ interface PageProps {
 }
 
 export default async function VerifyOTPPage({ searchParams }: PageProps) {
-  const session = await getServerSession(authOptions);
-
-  // If user is already logged in, redirect to dashboard
-  if (session) {
-    redirect('/dashboard');
-  }
-
   // Await the searchParams promise
   const params = await searchParams;
 
