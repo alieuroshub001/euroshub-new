@@ -1,4 +1,4 @@
-import SignupForm from '@/components/auth/signup';
+import SignupForm from '@/components/auth/SignupForm';
 import AuthGuard from '@/components/auth/AuthGuard';
 
 export default function SignupPage() {
