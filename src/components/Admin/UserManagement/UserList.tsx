@@ -91,7 +91,7 @@ export default function UserList() {
       fetchUsers(pagination.current, true);
       fetchUserCounts();
     }, 30000); // Refresh every 30 seconds
-  }, [pagination.current]); // Only depend on current page
+  }, [fetchUsers, fetchUserCounts, pagination.current]);
 
   const stopAutoRefresh = useCallback(() => {
     if (intervalRef.current) {
@@ -105,30 +105,53 @@ export default function UserList() {
     await fetchUserCounts();
   };
 
+  // Create refs for stable function references
+  const fetchUsersRef = useRef(fetchUsers);
+  const fetchUserCountsRef = useRef(fetchUserCounts);
+  const startAutoRefreshRef = useRef(startAutoRefresh);
+  const stopAutoRefreshRef = useRef(stopAutoRefresh);
+
+  // Update refs when functions change
+  useEffect(() => {
+    fetchUsersRef.current = fetchUsers;
+  }, [fetchUsers]);
+
+  useEffect(() => {
+    fetchUserCountsRef.current = fetchUserCounts;
+  }, [fetchUserCounts]);
+
+  useEffect(() => {
+    startAutoRefreshRef.current = startAutoRefresh;
+  }, [startAutoRefresh]);
+
+  useEffect(() => {
+    stopAutoRefreshRef.current = stopAutoRefresh;
+  }, [stopAutoRefresh]);
+
   // Initial load
   useEffect(() => {
-    fetchUsers();
-    fetchUserCounts();
-    startAutoRefresh();
+    fetchUsersRef.current();
+    fetchUserCountsRef.current();
+    startAutoRefreshRef.current();
 
     // Cleanup on unmount
     return () => {
-      stopAutoRefresh();
+      stopAutoRefreshRef.current();
     };
   }, []); // Empty dependency array for initial load only
 
   // Handle filter changes
   useEffect(() => {
-    fetchUsers(1); // Reset to page 1 when filters change
+    fetchUsersRef.current(1); // Reset to page 1 when filters change
   }, [filters]);
 
   // Handle visibility change to pause/resume auto-refresh
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.hidden) {
-        stopAutoRefresh();
+        stopAutoRefreshRef.current();
       } else {
-        startAutoRefresh();
+        startAutoRefreshRef.current();
       }
     };
 
@@ -137,7 +160,7 @@ export default function UserList() {
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [startAutoRefresh, stopAutoRefresh]);
+  }, []); // Empty dependency array since we use refs
 
   const handleStatusUpdate = async (userId: string, status: 'approved' | 'declined' | 'blocked', employeeId?: string, clientId?: string) => {
     setActionLoading(userId);
@@ -354,7 +377,6 @@ export default function UserList() {
               <UserListView
                 users={users}
                 onStatusUpdate={handleStatusUpdate}
-                onUserUpdate={handleUserUpdate}
                 onUserDelete={handleUserDelete}
                 onUserUnblock={handleUserUnblock}
                 actionLoading={actionLoading}

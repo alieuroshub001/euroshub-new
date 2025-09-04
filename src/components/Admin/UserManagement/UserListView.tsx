@@ -2,19 +2,16 @@
 import { IUser } from '@/types';
 import { useState } from 'react';
 import { 
-  PencilIcon, 
   TrashIcon, 
   LockClosedIcon, 
   LockOpenIcon,
   CheckCircleIcon,
-  XCircleIcon,
-  EyeIcon
+  XCircleIcon
 } from '@heroicons/react/24/outline';
 
 interface UserListViewProps {
   users: IUser[];
   onStatusUpdate: (userId: string, status: 'approved' | 'declined' | 'blocked', employeeId?: string, clientId?: string) => void;
-  onUserUpdate?: (userId: string, updates: Partial<IUser>) => void;
   onUserDelete?: (userId: string) => void;
   onUserUnblock?: (userId: string) => void;
   actionLoading: string | null;
@@ -23,7 +20,6 @@ interface UserListViewProps {
 export default function UserListView({ 
   users, 
   onStatusUpdate, 
-  onUserUpdate, 
   onUserDelete, 
   onUserUnblock, 
   actionLoading 

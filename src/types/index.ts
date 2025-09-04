@@ -85,6 +85,16 @@ export interface IUser {
   emailVerified?: boolean;
   status?: string;
   accountStatus: string;
+  statusUpdatedBy?: string;
+  statusUpdatedByName?: string;
+  statusUpdatedAt?: Date;
+  statusHistory?: Array<{
+    status: string;
+    updatedBy: string;
+    updatedByName: string;
+    updatedAt: Date;
+    reason?: string;
+  }>;
   createdAt: Date;
   updatedAt?: Date;
 }
