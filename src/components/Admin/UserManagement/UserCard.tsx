@@ -180,33 +180,33 @@ export default function UserCard({ user, onStatusUpdate, onUserUpdate, onUserDel
             </div>
           </div>
 
-          <div className="space-y-3 mb-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-              <div className="flex items-center gap-2">
-                <span className="font-medium text-gray-700">Email:</span>
-                <span className="text-gray-600 break-all">{user.email}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="font-medium text-gray-700">Phone:</span>
-                <span className="text-gray-600">{user.number}</span>
-              </div>
-              {user.employeeId && (
-                <div className="flex items-center gap-2">
-                  <span className="font-medium text-gray-700">Employee ID:</span>
-                  <span className="text-gray-600">{user.employeeId}</span>
-                </div>
-              )}
-              {user.clientId && (
-                <div className="flex items-center gap-2">
-                  <span className="font-medium text-gray-700">Client ID:</span>
-                  <span className="text-gray-600">{user.clientId}</span>
-                </div>
-              )}
-              <div className="flex items-center gap-2 col-span-1 sm:col-span-2">
-                <span className="font-medium text-gray-700">Created:</span>
-                <span className="text-gray-600">{new Date(user.createdAt).toLocaleDateString()}</span>
-              </div>
-            </div>
+         <div className="space-y-3 mb-6">
+  <div className="flex flex-wrap gap-4 text-sm">
+    <div className="flex items-center gap-2">
+      <span className="font-medium text-gray-700">Email:</span>
+      <span className="text-gray-600 break-all">{user.email}</span>
+    </div>
+    <div className="flex items-center gap-2">
+      <span className="font-medium text-gray-700">Phone:</span>
+      <span className="text-gray-600">{user.number}</span>
+    </div>
+    {user.employeeId && (
+      <div className="flex items-center gap-2">
+        <span className="font-medium text-gray-700">Employee ID:</span>
+        <span className="text-gray-600">{user.employeeId}</span>
+      </div>
+    )}
+    {user.clientId && (
+      <div className="flex items-center gap-2">
+        <span className="font-medium text-gray-700">Client ID:</span>
+        <span className="text-gray-600">{user.clientId}</span>
+      </div>
+    )}
+    <div className="flex items-center gap-2">
+      <span className="font-medium text-gray-700">Created:</span>
+      <span className="text-gray-600">{new Date(user.createdAt).toLocaleDateString()}</span>
+    </div>
+  </div>
             
             {/* Admin Action Details */}
             {user.statusUpdatedByName && user.accountStatus !== 'pending' && (
