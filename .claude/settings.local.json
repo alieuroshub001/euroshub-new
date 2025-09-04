@@ -7,7 +7,22 @@
       "Bash(npm run dev:*)",
       "Bash(npm run build:*)",
       "Bash(taskkill:*)",
-      "Bash(cd:*)"
+      "Bash(cd:*)",
+      "Read(/C:\\Users\\Ali Rayyan\\Desktop\\euroshub-new\\src\\types/**)",
+      "Read(/C:\\Users\\Ali Rayyan\\Desktop\\euroshub-new\\src\\models/**)",
+      "Read(/C:\\Users\\Ali Rayyan\\Desktop\\euroshub-new\\src\\models/**)",
+      "Read(/C:\\Users\\Ali Rayyan\\Desktop\\euroshub-new\\src\\models/**)",
+      "Read(/C:\\Users\\Ali Rayyan\\Desktop\\euroshub-new\\src\\models/**)",
+      "Bash(move:*)",
+      "Read(/C:\\Users\\Ali Rayyan\\Desktop\\euroshub-new\\src\\lib/**)",
+      "Read(/C:\\Users\\Ali Rayyan\\Desktop\\euroshub-new\\src\\lib/**)",
+      "Read(/C:\\Users\\Ali Rayyan\\Desktop\\euroshub-new\\src\\app\\api\\admin\\users/**)",
+      "Read(/C:\\Users\\Ali Rayyan\\Desktop\\euroshub-new\\src\\app\\api\\boards\\[id]/**)",
+      "Read(/C:\\Users\\Ali Rayyan\\Desktop\\euroshub-new\\src\\app\\api\\boards/**)",
+      "Read(/C:\\Users\\Ali Rayyan\\Desktop\\euroshub-new\\src\\app\\api\\tasks\\[id]\\comments/**)",
+      "Read(/C:\\Users\\Ali Rayyan\\Desktop\\euroshub-new\\src\\app\\api\\tasks\\[id]\\comments/**)",
+      "Read(/C:\\Users\\Ali Rayyan\\Desktop\\euroshub-new\\src\\app\\api\\tasks\\move/**)",
+      "Read(/C:\\Users\\Ali Rayyan\\Desktop\\euroshub-new\\src\\app\\api\\tasks/**)"
     ],
     "deny": [],
     "ask": []
