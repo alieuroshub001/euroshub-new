@@ -1,151 +1,269 @@
-"use client"
+"use client";
+import { cn } from "@/lib/utils";
+import React, { useEffect, useState, useRef } from "react";
+
+interface ShootingStar {
+  id: number;
+  x: number;
+  y: number;
+  angle: number;
+  scale: number;
+  speed: number;
+  distance: number;
+}
+
+interface ShootingStarsProps {
+  minSpeed?: number;
+  maxSpeed?: number;
+  minDelay?: number;
+  maxDelay?: number;
+  starColor?: string;
+  trailColor?: string;
+  starWidth?: number;
+  starHeight?: number;
+  className?: string;
+}
+
+const getRandomStartPoint = () => {
+  const side = Math.floor(Math.random() * 4);
+  const offset = Math.random() * window.innerWidth;
+
+  switch (side) {
+    case 0:
+      return { x: offset, y: 0, angle: 45 };
+    case 1:
+      return { x: window.innerWidth, y: offset, angle: 135 };
+    case 2:
+      return { x: offset, y: window.innerHeight, angle: 225 };
+    case 3:
+      return { x: 0, y: offset, angle: 315 };
+    default:
+      return { x: 0, y: 0, angle: 45 };
+  }
+};
+
+const ShootingStars: React.FC<ShootingStarsProps> = ({
+  minSpeed = 10,
+  maxSpeed = 30,
+  minDelay = 1200,
+  maxDelay = 4200,
+  starColor = "#9E00FF",
+  trailColor = "#2EB9DF",
+  starWidth = 10,
+  starHeight = 1,
+  className,
+}) => {
+  const [star, setStar] = useState<ShootingStar | null>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
+
+  useEffect(() => {
+    const createStar = () => {
+      const { x, y, angle } = getRandomStartPoint();
+      const newStar: ShootingStar = {
+        id: Date.now(),
+        x,
+        y,
+        angle,
+        scale: 1,
+        speed: Math.random() * (maxSpeed - minSpeed) + minSpeed,
+        distance: 0,
+      };
+      setStar(newStar);
+
+      const randomDelay = Math.random() * (maxDelay - minDelay) + minDelay;
+      setTimeout(createStar, randomDelay);
+    };
+
+    createStar();
+
+    return () => {};
+  }, [minSpeed, maxSpeed, minDelay, maxDelay]);
+
+  useEffect(() => {
+    const moveStar = () => {
+      if (star) {
+        setStar((prevStar) => {
+          if (!prevStar) return null;
+          const newX =
+            prevStar.x +
+            prevStar.speed * Math.cos((prevStar.angle * Math.PI) / 180);
+          const newY =
+            prevStar.y +
+            prevStar.speed * Math.sin((prevStar.angle * Math.PI) / 180);
+          const newDistance = prevStar.distance + prevStar.speed;
+          const newScale = 1 + newDistance / 100;
+          if (
+            newX < -20 ||
+            newX > window.innerWidth + 20 ||
+            newY < -20 ||
+            newY > window.innerHeight + 20
+          ) {
+            return null;
+          }
+          return {
+            ...prevStar,
+            x: newX,
+            y: newY,
+            distance: newDistance,
+            scale: newScale,
+          };
+        });
+      }
+    };
+
+    const animationFrame = requestAnimationFrame(moveStar);
+    return () => cancelAnimationFrame(animationFrame);
+  }, [star]);
+
+  return (
+    <svg
+      ref={svgRef}
+      className={cn("w-full h-full absolute inset-0", className)}
+    >
+      {star && (
+        <rect
+          key={star.id}
+          x={star.x}
+          y={star.y}
+          width={starWidth * star.scale}
+          height={starHeight}
+          fill="url(#gradient)"
+          transform={`rotate(${star.angle}, ${
+            star.x + (starWidth * star.scale) / 2
+          }, ${star.y + starHeight / 2})`}
+        />
+      )}
+      <defs>
+        <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style={{ stopColor: trailColor, stopOpacity: 0 }} />
+          <stop
+            offset="100%"
+            style={{ stopColor: starColor, stopOpacity: 1 }}
+          />
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+};
 
 export default function LoadingSpinner() {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center space-tunnel">
-      {/* 3D Star tunnel effect */}
-      <div className="absolute inset-0 perspective-container">
-        {/* Multiple layers of stars coming towards user */}
-        {[...Array(150)].map((_, i) => (
-          <div
-            key={i}
-            className="star-3d"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 4}s`,
-              animationDuration: `${2 + Math.random() * 3}s`,
-              '--start-z': `${-1000 - Math.random() * 2000}px`,
-              '--end-z': '1000px',
-              '--star-size': `${1 + Math.random() * 2}px`,
-            } as React.CSSProperties}
-          />
-        ))}
-      </div>
+  const [isLoading, setIsLoading] = useState(true);
+  const [isVisible, setIsVisible] = useState(true);
 
-      {/* Status text */}
-      <div className="relative z-10">
-        <div className="status-text">
-          <div className="main-text">HYPERSPACE JUMP</div>
-          <div className="sub-text">
-            <span className="loading-word">Loading</span>
-            <div className="progress-dots">
-              <span></span>
-              <span></span>
-              <span></span>
-            </div>
-          </div>
+  useEffect(() => {
+    const handleLoad = () => {
+      setTimeout(() => {
+        setIsLoading(false);
+        setTimeout(() => setIsVisible(false), 300);
+      }, 1000);
+    };
+
+    const checkIfFullyLoaded = () => {
+      if (document.readyState === 'complete') {
+        const images = document.querySelectorAll('img');
+        const imagePromises = Array.from(images).map(img => {
+          if (img.complete) return Promise.resolve();
+          return new Promise(resolve => {
+            img.onload = resolve;
+            img.onerror = resolve;
+          });
+        });
+
+        Promise.all(imagePromises).then(() => {
+          handleLoad();
+        });
+      }
+    };
+
+    if (document.readyState === 'complete') {
+      checkIfFullyLoaded();
+    } else {
+      window.addEventListener('load', checkIfFullyLoaded);
+      return () => window.removeEventListener('load', checkIfFullyLoaded);
+    }
+  }, []);
+
+  if (!isVisible) return null;
+
+  return (
+    <div className={`fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 transition-opacity duration-300 ${isLoading ? 'opacity-100' : 'opacity-0'}`}>
+      <ShootingStars
+        minSpeed={5}
+        maxSpeed={15}
+        minDelay={800}
+        maxDelay={2500}
+        starColor="#9E00FF"
+        trailColor="#2EB9DF"
+        starWidth={8}
+        starHeight={1}
+      />
+      <div className="text-center">
+        <img src="/assets/logo.png" alt="Logo" className="logo" />
+        <div className="spinner">
+          <div className="spinner-ring"></div>
+          <div className="spinner-ring"></div>
+          <div className="spinner-ring"></div>
         </div>
       </div>
 
       <style jsx>{`
-        .space-tunnel {
-          background: radial-gradient(ellipse at center, #0a0a0a 0%, #000000 70%, #000000 100%);
-          perspective: 1000px;
-          overflow: hidden;
+        .spinner {
+          position: relative;
+          width: 88px;
+          height: 88px;
+          margin: 0 auto 16px;
         }
 
-        .perspective-container {
-          perspective: 1000px;
-          transform-style: preserve-3d;
-        }
-
-        /* 3D Stars coming towards user */
-        .star-3d {
+        .spinner-ring {
           position: absolute;
-          width: var(--star-size);
-          height: var(--star-size);
-          background: radial-gradient(circle, #ffffff 0%, rgba(255,255,255,0.8) 50%, transparent 100%);
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          border: 3px solid transparent;
+          border-top-color: #2EB9DF;
           border-radius: 50%;
-          transform: translateZ(var(--start-z));
-          animation: warp-speed linear infinite;
-          box-shadow: 0 0 6px #ffffff, 0 0 12px #ffffff;
+          animation: spin 1.2s linear infinite;
+          box-shadow: 0 0 20px rgba(46, 185, 223, 0.3);
         }
 
-        @keyframes warp-speed {
-          0% {
-            transform: translateZ(var(--start-z)) scale(0.1);
-            opacity: 0;
-          }
-          10% {
-            opacity: 1;
-          }
-          80% {
-            opacity: 1;
-            transform: translateZ(0px) scale(1);
-          }
-          100% {
-            transform: translateZ(var(--end-z)) scale(3);
-            opacity: 0;
-          }
+        .spinner-ring:nth-child(2) {
+          width: 80%;
+          height: 80%;
+          top: 10%;
+          left: 10%;
+          border-top-color: #9E00FF;
+          animation-duration: 1.5s;
+          animation-direction: reverse;
+          box-shadow: 0 0 20px rgba(158, 0, 255, 0.3);
         }
 
-        /* Status Text */
-        .status-text {
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          text-align: center;
+        .spinner-ring:nth-child(3) {
+          width: 60%;
+          height: 60%;
+          top: 20%;
+          left: 20%;
+          border-top-color: #ffffff;
+          animation-duration: 0.9s;
+          box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
         }
 
-        .main-text {
-          color: #00ffff;
-          font-size: 16px;
-          font-weight: 700;
-          letter-spacing: 3px;
-          text-shadow: 
-            0 0 10px #00ffff,
-            0 0 20px #00ffff,
-            0 0 30px #00ffff;
-          font-family: 'Courier New', monospace;
-          animation: text-flicker 3s ease-in-out infinite;
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
         }
 
-        .sub-text {
-          margin-top: 10px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
+        .logo {
+          width: 108px;
+          height: 108px;
+          object-fit: contain;
+          margin-bottom: 16px;
+          opacity: 0;
+          animation: fade-in 0.5s ease-out forwards;
         }
-
-        .loading-word {
-          color: #ffffff;
-          font-size: 14px;
-          font-weight: 600;
-          letter-spacing: 2px;
-          text-shadow: 0 0 10px rgba(255,255,255,0.5);
-        }
-
-        .progress-dots {
-          display: flex;
-          gap: 3px;
-        }
-
-        .progress-dots span {
-          width: 4px;
-          height: 4px;
-          border-radius: 50%;
-          background: #00ffff;
-          animation: dot-pulse 1.5s ease-in-out infinite;
-          box-shadow: 0 0 8px #00ffff;
-        }
-
-        .progress-dots span:nth-child(1) { animation-delay: 0s; }
-        .progress-dots span:nth-child(2) { animation-delay: 0.3s; }
-        .progress-dots span:nth-child(3) { animation-delay: 0.6s; }
-
-        @keyframes dot-pulse {
-          0%, 100% { transform: scale(0.8); opacity: 0.4; }
-          50% { transform: scale(1.3); opacity: 1; }
-        }
-
-        @keyframes text-flicker {
-          0%, 100% { opacity: 1; }
-          98% { opacity: 1; }
-          99% { opacity: 0.8; }
-          99.5% { opacity: 1; }
+        @keyframes fade-in {
+          0% { opacity: 0; transform: translateY(8px); }
+          100% { opacity: 1; transform: translateY(0); }
         }
       `}</style>
     </div>

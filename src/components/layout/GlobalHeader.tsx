@@ -68,7 +68,7 @@ export default function GlobalHeader() {
           {/* Left side - could add breadcrumbs or page title here */}
           <div className="flex-1">
             <h1 className="text-xl font-semibold text-gray-900">
-              EuroShub Dashboard
+              EurosHub Dashboard
             </h1>
           </div>
 
