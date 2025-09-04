@@ -89,11 +89,25 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Get admin user info for tracking
+    const adminUser = await User.findById(token.id);
+    const adminName = adminUser ? adminUser.fullname : 'Unknown Admin';
+
     // Update user status
     const updateData: Record<string, unknown> = {
       accountStatus: status,
       statusUpdatedBy: token.id,
-      statusUpdatedAt: new Date()
+      statusUpdatedByName: adminName,
+      statusUpdatedAt: new Date(),
+      $push: {
+        statusHistory: {
+          status: status,
+          updatedBy: token.id,
+          updatedByName: adminName,
+          updatedAt: new Date(),
+          reason: `Status changed to ${status}`
+        }
+      }
     };
 
     if (status === 'approved') {

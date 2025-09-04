@@ -264,7 +264,7 @@ export default function Sidebar({ isOpen, setIsOpen, isCollapsed, setIsCollapsed
           isCollapsed ? 'w-16' : 'w-72'
         } ${
           isOpen ? 'fixed inset-y-0 left-0 z-50 translate-x-0' : 'fixed inset-y-0 left-0 z-50 -translate-x-full'
-        } lg:relative lg:translate-x-0 lg:z-auto`}
+        } lg:fixed lg:inset-y-0 lg:left-0 lg:z-40 lg:translate-x-0`}
       >
         <div className="flex flex-col h-full min-h-0">
           {/* Header */}

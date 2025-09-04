@@ -12,7 +12,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="bg-gray-100 min-h-screen">
       <Sidebar 
         isOpen={sidebarOpen} 
         setIsOpen={setSidebarOpen}
@@ -20,7 +20,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         setIsCollapsed={setSidebarCollapsed}
       />
       
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className={`flex flex-col min-h-screen transition-all duration-300 ${
+        sidebarCollapsed ? 'lg:ml-16' : 'lg:ml-72'
+      }`}>
         {/* Mobile header */}
         <div className="lg:hidden flex items-center justify-between p-4 bg-white border-b border-gray-200 shadow-sm">
           <button
@@ -40,7 +42,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         </div>
 
         {/* Main content */}
-        <div className="flex-1 overflow-auto bg-gray-50">
+        <div className="flex-1 bg-gray-50">
           {children}
         </div>
       </div>

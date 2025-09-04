@@ -2,8 +2,9 @@
 import { IUser, IUserManagementFilters } from '@/types';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import UserCard from './UserCard';
+import UserListView from './UserListView';
 import UserFilters from './UserFilters';
-import { ArrowPathIcon } from '@heroicons/react/24/outline';
+import { ArrowPathIcon, Squares2X2Icon, ListBulletIcon } from '@heroicons/react/24/outline';
 
 export default function UserList() {
   const [users, setUsers] = useState<IUser[]>([]);
@@ -24,6 +25,7 @@ export default function UserList() {
     declined: 0,
     blocked: 0
   });
+  const [viewMode, setViewMode] = useState<'card' | 'list'>('card');
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const fetchUsers = useCallback(async (page = 1, isRefresh = false) => {
@@ -89,7 +91,7 @@ export default function UserList() {
       fetchUsers(pagination.current, true);
       fetchUserCounts();
     }, 30000); // Refresh every 30 seconds
-  }, [fetchUsers, fetchUserCounts, pagination]);
+  }, [pagination.current]); // Only depend on current page
 
   const stopAutoRefresh = useCallback(() => {
     if (intervalRef.current) {
@@ -103,6 +105,7 @@ export default function UserList() {
     await fetchUserCounts();
   };
 
+  // Initial load
   useEffect(() => {
     fetchUsers();
     fetchUserCounts();
@@ -112,7 +115,12 @@ export default function UserList() {
     return () => {
       stopAutoRefresh();
     };
-  }, [fetchUsers, fetchUserCounts, startAutoRefresh, stopAutoRefresh]);
+  }, []); // Empty dependency array for initial load only
+
+  // Handle filter changes
+  useEffect(() => {
+    fetchUsers(1); // Reset to page 1 when filters change
+  }, [filters]);
 
   // Handle visibility change to pause/resume auto-refresh
   useEffect(() => {
@@ -277,14 +285,42 @@ export default function UserList() {
           </div>
         </div>
         
-        <button
-          onClick={handleManualRefresh}
-          disabled={refreshing}
-          className="flex items-center gap-2 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
-        >
-          <ArrowPathIcon className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-          {refreshing ? 'Refreshing...' : 'Refresh Now'}
-        </button>
+        <div className="flex items-center gap-3">
+          {/* View Mode Toggle */}
+          <div className="flex items-center bg-gray-100 rounded-lg p-1">
+            <button
+              onClick={() => setViewMode('card')}
+              className={`flex items-center gap-2 px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+                viewMode === 'card'
+                  ? 'bg-white text-blue-600 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <Squares2X2Icon className="w-4 h-4" />
+              Cards
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={`flex items-center gap-2 px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+                viewMode === 'list'
+                  ? 'bg-white text-blue-600 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <ListBulletIcon className="w-4 h-4" />
+              List
+            </button>
+          </div>
+
+          <button
+            onClick={handleManualRefresh}
+            disabled={refreshing}
+            className="flex items-center gap-2 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+          >
+            <ArrowPathIcon className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+            {refreshing ? 'Refreshing...' : 'Refresh Now'}
+          </button>
+        </div>
       </div>
 
       <UserFilters
@@ -299,19 +335,32 @@ export default function UserList() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
-            {users.map((user) => (
-              <UserCard
-                key={user._id || user.id}
-                user={user}
+          {viewMode === 'card' ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
+              {users.map((user) => (
+                <UserCard
+                  key={user._id || user.id}
+                  user={user}
+                  onStatusUpdate={handleStatusUpdate}
+                  onUserUpdate={handleUserUpdate}
+                  onUserDelete={handleUserDelete}
+                  onUserUnblock={handleUserUnblock}
+                  isLoading={actionLoading === user.id}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="mb-6">
+              <UserListView
+                users={users}
                 onStatusUpdate={handleStatusUpdate}
                 onUserUpdate={handleUserUpdate}
                 onUserDelete={handleUserDelete}
                 onUserUnblock={handleUserUnblock}
-                isLoading={actionLoading === user.id}
+                actionLoading={actionLoading}
               />
-            ))}
-          </div>
+            </div>
+          )}
 
           {/* Pagination */}
           {pagination.total > 1 && (

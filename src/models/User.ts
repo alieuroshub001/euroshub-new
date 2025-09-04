@@ -45,8 +45,25 @@ const UserSchema: Schema = new Schema({
       return this.role === 'admin' ? 'approved' : 'pending';
     }
   },
-  statusUpdatedBy: { type: String },
+  statusUpdatedBy: { 
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  statusUpdatedByName: { type: String },
   statusUpdatedAt: { type: Date },
+  statusHistory: [{
+    status: {
+      type: String,
+      enum: ['pending', 'approved', 'declined', 'blocked']
+    },
+    updatedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    updatedByName: { type: String },
+    updatedAt: { type: Date, default: Date.now },
+    reason: { type: String }
+  }],
   emailVerified: { type: Boolean, default: false },
   verificationToken: { type: String },
   createdAt: { type: Date, default: Date.now },

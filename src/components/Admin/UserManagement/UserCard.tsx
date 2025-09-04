@@ -189,6 +189,20 @@ export default function UserCard({ user, onStatusUpdate, onUserUpdate, onUserDel
             <p className="text-sm"><span className="font-medium">Client ID:</span> {user.clientId}</p>
           )}
           <p className="text-sm"><span className="font-medium">Created:</span> {new Date(user.createdAt).toLocaleDateString()}</p>
+          
+          {/* Admin Action Details */}
+          {user.statusUpdatedByName && user.accountStatus !== 'pending' && (
+            <div className="mt-3 pt-3 border-t border-gray-100">
+              <p className="text-xs text-gray-500">
+                <span className="font-medium">Last action by:</span> {user.statusUpdatedByName}
+              </p>
+              {user.statusUpdatedAt && (
+                <p className="text-xs text-gray-500">
+                  <span className="font-medium">Date:</span> {new Date(user.statusUpdatedAt).toLocaleString()}
+                </p>
+              )}
+            </div>
+          )}
         </div>
 
         {user.accountStatus === 'pending' && (
