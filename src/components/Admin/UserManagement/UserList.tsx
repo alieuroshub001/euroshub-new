@@ -295,54 +295,59 @@ export default function UserList() {
   }
 
   return (
-    <div>
-      {/* Header with refresh button */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-4">
-          <h2 className="text-lg font-semibold text-gray-900">
-            User Management Dashboard
-          </h2>
-          <div className="flex items-center gap-2 text-sm text-gray-500">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-            Auto-refreshing every 30s
+    <div className="space-y-6">
+      {/* Modern Header */}
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+            <div>
+              <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                User Management
+              </h1>
+              <p className="text-sm text-gray-600 mt-1">Manage user registrations and account statuses</p>
+            </div>
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-green-100 text-green-700 rounded-full text-xs font-medium">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+              Auto-sync every 30s
+            </div>
           </div>
-        </div>
-        
-        <div className="flex items-center gap-3">
-          {/* View Mode Toggle */}
-          <div className="flex items-center bg-gray-100 rounded-lg p-1">
-            <button
-              onClick={() => setViewMode('card')}
-              className={`flex items-center gap-2 px-3 py-1 rounded-md text-sm font-medium transition-colors ${
-                viewMode === 'card'
-                  ? 'bg-white text-blue-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              <Squares2X2Icon className="w-4 h-4" />
-              Cards
-            </button>
-            <button
-              onClick={() => setViewMode('list')}
-              className={`flex items-center gap-2 px-3 py-1 rounded-md text-sm font-medium transition-colors ${
-                viewMode === 'list'
-                  ? 'bg-white text-blue-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              <ListBulletIcon className="w-4 h-4" />
-              List
-            </button>
-          </div>
+          
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            {/* View Mode Toggle */}
+            <div className="flex items-center bg-white rounded-xl p-1 shadow-sm border border-gray-200">
+              <button
+                onClick={() => setViewMode('card')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  viewMode === 'card'
+                    ? 'bg-blue-500 text-white shadow-md transform scale-105'
+                    : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
+                }`}
+              >
+                <Squares2X2Icon className="w-4 h-4" />
+                <span className="hidden sm:inline">Cards</span>
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  viewMode === 'list'
+                    ? 'bg-blue-500 text-white shadow-md transform scale-105'
+                    : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
+                }`}
+              >
+                <ListBulletIcon className="w-4 h-4" />
+                <span className="hidden sm:inline">List</span>
+              </button>
+            </div>
 
-          <button
-            onClick={handleManualRefresh}
-            disabled={refreshing}
-            className="flex items-center gap-2 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
-          >
-            <ArrowPathIcon className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-            {refreshing ? 'Refreshing...' : 'Refresh Now'}
-          </button>
+            <button
+              onClick={handleManualRefresh}
+              disabled={refreshing}
+              className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-medium"
+            >
+              <ArrowPathIcon className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline">{refreshing ? 'Refreshing...' : 'Refresh'}</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -353,13 +358,19 @@ export default function UserList() {
       />
 
       {users.length === 0 ? (
-        <div className="text-center py-8">
-          <div className="text-gray-500">No users found matching the current filters.</div>
+        <div className="text-center py-16">
+          <div className="w-24 h-24 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-4">
+            <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No users found</h3>
+          <p className="text-gray-500 max-w-sm mx-auto">No users match the current filters. Try adjusting your search criteria or clearing filters.</p>
         </div>
       ) : (
         <>
           {viewMode === 'card' ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
               {users.map((user) => (
                 <UserCard
                   key={user._id || user.id}
@@ -373,7 +384,7 @@ export default function UserList() {
               ))}
             </div>
           ) : (
-            <div className="mb-6">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
               <UserListView
                 users={users}
                 onStatusUpdate={handleStatusUpdate}
@@ -384,29 +395,61 @@ export default function UserList() {
             </div>
           )}
 
-          {/* Pagination */}
+          {/* Modern Pagination */}
           {pagination.total > 1 && (
-            <div className="flex justify-center items-center gap-2">
-              <button
-                onClick={() => handlePageChange(pagination.current - 1)}
-                disabled={pagination.current === 1}
-                className="px-3 py-2 border border-gray-300 rounded-md disabled:opacity-50"
-              >
-                Previous
-              </button>
-              
-              <span className="px-4 py-2 text-sm text-gray-600">
-                Page {pagination.current} of {pagination.total}
-                ({pagination.totalCount} total users)
-              </span>
-              
-              <button
-                onClick={() => handlePageChange(pagination.current + 1)}
-                disabled={pagination.current === pagination.total}
-                className="px-3 py-2 border border-gray-300 rounded-md disabled:opacity-50"
-              >
-                Next
-              </button>
+            <div className="mt-8 bg-white rounded-xl border border-gray-200 p-4">
+              <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div className="text-sm text-gray-600">
+                  Showing <span className="font-medium">{Math.min((pagination.current - 1) * 10 + 1, pagination.totalCount)}</span> to{' '}
+                  <span className="font-medium">{Math.min(pagination.current * 10, pagination.totalCount)}</span> of{' '}
+                  <span className="font-medium">{pagination.totalCount}</span> users
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handlePageChange(pagination.current - 1)}
+                    disabled={pagination.current === 1}
+                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                    Previous
+                  </button>
+                  
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: Math.min(5, pagination.total) }, (_, i) => {
+                      const pageNum = pagination.current <= 3 ? i + 1 : pagination.current - 2 + i;
+                      if (pageNum > pagination.total) return null;
+                      
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => handlePageChange(pageNum)}
+                          className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                            pageNum === pagination.current
+                              ? 'bg-blue-500 text-white shadow-md'
+                              : 'text-gray-700 hover:bg-gray-100'
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  
+                  <button
+                    onClick={() => handlePageChange(pagination.current + 1)}
+                    disabled={pagination.current === pagination.total}
+                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Next
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
             </div>
           )}
         </>
