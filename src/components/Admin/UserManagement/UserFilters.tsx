@@ -1,5 +1,6 @@
 "use client"
 import { IUserManagementFilters } from '@/types';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 interface UserFiltersProps {
   filters: IUserManagementFilters;
@@ -14,16 +15,50 @@ interface UserFiltersProps {
 }
 
 export default function UserFilters({ filters, onFiltersChange, userCounts }: UserFiltersProps) {
+  const [searchInput, setSearchInput] = useState(filters.search || '');
+  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Simple debounced search handler
+  const handleSearchInputChange = (search: string) => {
+    console.log('handleSearchInputChange called with:', search);
+    const newSearchValue = search;
+    setSearchInput(newSearchValue);
+    
+    // Clear existing timeout
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
+    
+    // Set new timeout - the timeout will only fire for the last keystroke
+    debounceTimeoutRef.current = setTimeout(() => {
+      // This will be the search value from the last keystroke that set the timeout
+      console.log('Timeout fired, sending to API:', newSearchValue);
+      onFiltersChange({ ...filters, search: newSearchValue });
+    }, 500);
+  };
+
+  // Update local search input when filters.search changes externally (like when clearing filters)  
+  useEffect(() => {
+    if (filters.search !== searchInput) {
+      setSearchInput(filters.search || '');
+    }
+  }, [filters.search]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const handleRoleChange = (role: 'client' | 'hr' | 'employee' | undefined) => {
     onFiltersChange({ ...filters, role });
   };
 
   const handleStatusChange = (status: 'pending' | 'approved' | 'declined' | 'blocked' | undefined) => {
     onFiltersChange({ ...filters, status });
-  };
-
-  const handleSearchChange = (search: string) => {
-    onFiltersChange({ ...filters, search });
   };
 
   return (
@@ -36,8 +71,11 @@ export default function UserFilters({ filters, onFiltersChange, userCounts }: Us
           </label>
           <input
             type="text"
-            value={filters.search || ''}
-            onChange={(e) => handleSearchChange(e.target.value)}
+            value={searchInput}
+            onChange={(e) => {
+              console.log('Raw onChange fired:', e.target.value);
+              handleSearchInputChange(e.target.value);
+            }}
             placeholder="Search by name, email, or ID"
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
@@ -81,7 +119,10 @@ export default function UserFilters({ filters, onFiltersChange, userCounts }: Us
         {/* Clear Filters */}
         <div className="flex items-end">
           <button
-            onClick={() => onFiltersChange({ search: '', role: '', status: '', idAssigned: '' })}
+            onClick={() => {
+              setSearchInput('');
+              onFiltersChange({ search: '', role: '', status: '', idAssigned: '' });
+            }}
             className="w-full px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
           >
             Clear Filters

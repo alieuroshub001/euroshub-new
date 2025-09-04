@@ -97,5 +97,5 @@ export async function sendStatusUpdateEmail({
     </div>
   `;
 
-  return await sendEmail(email, subject);
+  return await sendEmail(email, subject, html);
 }

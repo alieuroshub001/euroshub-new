@@ -143,7 +143,7 @@ export default function UserList() {
   // Handle filter changes
   useEffect(() => {
     fetchUsersRef.current(1); // Reset to page 1 when filters change
-  }, [filters]);
+  }, [filters.search, filters.role, filters.status, filters.idAssigned]);
 
   // Handle visibility change to pause/resume auto-refresh
   useEffect(() => {

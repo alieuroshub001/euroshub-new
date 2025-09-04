@@ -4,7 +4,7 @@ import connectToDatabase from '@/lib/db';
 import { createOTPRecord, hashPassword } from '@/lib/auth';
 import User from '@/models/User';
 import { IApiResponse } from '@/types';
-import { sendNewSignupNotificationToAdmin } from '@/lib/email';
+import { sendNewSignupNotificationToAdmin, sendNewSignupNotification } from '@/lib/email';
 
 export async function POST(request: Request) {
   try {
@@ -62,6 +62,16 @@ export async function POST(request: Request) {
     
     // Generate and send OTP
     await createOTPRecord(otpEmail!, 'verification');
+
+    // Send welcome email to user (except admin)
+    if (role !== 'admin') {
+      try {
+        await sendNewSignupNotification(email, fullname);
+      } catch (emailError) {
+        console.error('Failed to send welcome email:', emailError);
+        // Don't fail signup if welcome email fails
+      }
+    }
 
     // Send notification to admin for non-admin user signups
     if (role !== 'admin') {
